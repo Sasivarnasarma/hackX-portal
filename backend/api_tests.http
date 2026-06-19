@@ -1,0 +1,260 @@
+# ==============================================================================
+# 🚀 HackX & HackX Jr API Integration Tests
+# ==============================================================================
+# This file is compatible with the VS Code REST Client extension.
+# It allows executing HTTP queries directly inside the editor and chains
+# sequential request outputs (e.g. capturing verification tokens dynamically).
+#
+# Make sure the local server is running at http://localhost:8000 before starting.
+
+@baseUrl = http://localhost:8000
+@contentType = application/json
+
+
+### 1. System Diagnostics Check
+# Verify server status, maintainer, active environment, and docs active flags.
+GET {{baseUrl}}/
+Accept: {{contentType}}
+
+
+# ==============================================================================
+# 🎓 HACKX UNIVERSITY TIER REGISTRATION WORKFLOW
+# ==============================================================================
+
+### 2. Request OTP Code for HackX (University Tier)
+# @name sendOtpXRequest
+POST {{baseUrl}}/otp/send
+Content-Type: {{contentType}}
+
+{
+  "email": "hackx-leader@university.lk",
+  "turnstile_token": "mock-turnstile-token",
+  "purpose": "hackx_registration"
+}
+
+### 3. Extract Captcha Session Token from sendOtpXRequest Response
+@captchaTokenX = {{sendOtpXRequest.response.body.captcha_session_token}}
+
+
+### 4. Verify OTP Code to Receive Verification Token
+# NOTE: Replace '123456' below with the actual OTP code sent to your email 
+# (or read from stdout / backend/log.log in development).
+# @name verifyOtpXRequest
+POST {{baseUrl}}/otp/verify
+Content-Type: {{contentType}}
+
+{
+  "email": "hackx-leader@university.lk",
+  "otp": "123456",
+  "captcha_session_token": "{{captchaTokenX}}",
+  "purpose": "hackx_registration"
+}
+
+### 5. Extract Verification JWT Token from verifyOtpXResponse
+@verificationTokenX = {{verifyOtpXRequest.response.body.verification_token}}
+
+
+### 6. Perform Complete HackX Team Registration (Valid Input)
+# Verified leader email ("hackx-leader@university.lk") must match the OTP email above.
+POST {{baseUrl}}/x/register
+Content-Type: {{contentType}}
+
+{
+  "team_name": "DevLoopers",
+  "university": "University of Colombo",
+  "consent_share": true,
+  "expectations": "We want to master asynchronous backend integrations and gain networking opportunities.",
+  "source": "Facebook Ad",
+  "ambassador_code": "AMB-11-COLOMBO",
+  "verification_token": "{{verificationTokenX}}",
+  "members": [
+    {
+      "name": "Sasivarna Sarma",
+      "nic": "199923456780",
+      "phone": "0771234567",
+      "email": "hackx-leader@university.lk",
+      "is_leader": true
+    },
+    {
+      "name": "Jane Doe",
+      "nic": "981234567V",
+      "phone": "0719876543",
+      "email": "jane@university.lk",
+      "is_leader": false
+    },
+    {
+      "name": "John Doe",
+      "nic": "200098765432",
+      "phone": "0785556667",
+      "email": "john@university.lk",
+      "is_leader": false
+    }
+  ]
+}
+
+
+# ==============================================================================
+# 🎒 HACKX JR SCHOOL TIER REGISTRATION WORKFLOW
+# ==============================================================================
+
+### 7. Request OTP Code for HackX Jr (School Tier)
+# @name sendOtpJrRequest
+POST {{baseUrl}}/otp/send
+Content-Type: {{contentType}}
+
+{
+  "email": "jr-leader@school.lk",
+  "turnstile_token": "mock-turnstile-token",
+  "purpose": "hackx_jr_registration"
+}
+
+### 8. Extract Captcha Session Token from sendOtpJrRequest Response
+@captchaTokenJr = {{sendOtpJrRequest.response.body.captcha_session_token}}
+
+
+### 9. Verify OTP Code for Junior Category
+# NOTE: Replace '123456' below with the actual OTP code received.
+# @name verifyOtpJrRequest
+POST {{baseUrl}}/otp/verify
+Content-Type: {{contentType}}
+
+{
+  "email": "jr-leader@school.lk",
+  "otp": "123456",
+  "captcha_session_token": "{{captchaTokenJr}}",
+  "purpose": "hackx_jr_registration"
+}
+
+### 10. Extract Junior Verification JWT Token from verifyOtpJrResponse
+@verificationTokenJr = {{verifyOtpJrRequest.response.body.verification_token}}
+
+
+### 11. Perform Complete HackX Jr Team Registration (Valid Input)
+# District is validated and automatically converted to lowercase.
+# Verified email ("jr-leader@school.lk") must match the OTP email above.
+POST {{baseUrl}}/jr/register
+Content-Type: {{contentType}}
+
+{
+  "team_name": "CodeSpartans",
+  "school_name": "Ananda College",
+  "school_district": "Colombo",
+  "teacher_name": "Mr. Ranjith Perera",
+  "teacher_phone": "0778889990",
+  "teacher_email": "ranjith@ananda.sch.lk",
+  "consent_share": true,
+  "expectations": "To learn computational thinking and competitive programming fundamentals.",
+  "source": "School Teacher recommendation",
+  "ambassador_code": "AMB-9-JR-ANANDA",
+  "verification_token": "{{verificationTokenJr}}",
+  "members": [
+    {
+      "name": "Kaveesha Perera",
+      "dob": "2010-05-15",
+      "phone": "0711112223",
+      "email": "jr-leader@school.lk",
+      "is_leader": true
+    },
+    {
+      "name": "Maleesha Silva",
+      "dob": "2010-09-20",
+      "phone": "0723334445",
+      "email": "maleesha@school.lk",
+      "is_leader": false
+    }
+  ]
+}
+
+
+# ==============================================================================
+# 🚨 VALIDATION ERROR AND EDGE-CASE SIMULATIONS
+# ==============================================================================
+
+### 12. Register with Invalid Phone/NIC Pattern (Triggers Structured HTTP 400 Error)
+# Demonstrates unified professional error layout mapping nested paths:
+# - Leader phone does not match '^07\d{8}$'
+# - Member 2 NIC does not match Sri Lankan pattern
+POST {{baseUrl}}/x/register
+Content-Type: {{contentType}}
+
+{
+  "team_name": "ErrorTriggers",
+  "university": "University of Moratuwa",
+  "consent_share": false,
+  "expectations": "Learning robust API validation behaviors under constraints.",
+  "source": "Other",
+  "verification_token": "dummy_verification_token",
+  "members": [
+    {
+      "name": "Improper Phone",
+      "nic": "199923456780",
+      "phone": "+94771234567",
+      "email": "hackx-leader@university.lk",
+      "is_leader": true
+    },
+    {
+      "name": "Improper NIC",
+      "nic": "NIC_IS_INVALID",
+      "phone": "0719876543",
+      "email": "jane@university.lk",
+      "is_leader": false
+    }
+  ]
+}
+
+### 13. Register with Non-existent School District in Jr Tier (Triggers HTTP 400)
+# District "New York" is invalid. Returns standardized error response.
+POST {{baseUrl}}/jr/register
+Content-Type: {{contentType}}
+
+{
+  "team_name": "DistrictErrors",
+  "school_name": "Dharmaraja College",
+  "school_district": "New York",
+  "teacher_name": "Mr. K. Bandara",
+  "teacher_phone": "0771112223",
+  "teacher_email": "bandara@dharmaraja.lk",
+  "consent_share": false,
+  "expectations": "To verify dropdown bounds in backend schemas.",
+  "source": "Flyer",
+  "verification_token": "dummy_verification_token",
+  "members": [
+    {
+      "name": "Nipuna Silva",
+      "dob": "2009-03-12",
+      "phone": "0711112223",
+      "email": "jr-leader@school.lk",
+      "is_leader": true
+    }
+  ]
+}
+
+### 14. Register with Duplicate Member NICs (Triggers HTTP 400)
+# Leader and Member 2 have identical NIC numbers, which are blocked by schema validation.
+POST {{baseUrl}}/x/register
+Content-Type: {{contentType}}
+
+{
+  "team_name": "NicDuplicates",
+  "university": "SLIIT",
+  "consent_share": true,
+  "expectations": "Learning to handle duplicate blockages cleanly.",
+  "source": "Email Invite",
+  "verification_token": "dummy_verification_token",
+  "members": [
+    {
+      "name": "User One",
+      "nic": "199923456780",
+      "phone": "0771234567",
+      "email": "user1@sliit.lk",
+      "is_leader": true
+    },
+    {
+      "name": "User Two",
+      "nic": "199923456780",
+      "phone": "0719876543",
+      "email": "user2@sliit.lk",
+      "is_leader": false
+    }
+  ]
+}

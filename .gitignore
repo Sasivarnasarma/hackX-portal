@@ -1,0 +1,84 @@
+####################################
+# Python / FastAPI
+####################################
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Python packaging
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# FastAPI / Uvicorn
+*.log
+
+# Testing & tooling
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.pyre/
+.pytype/
+
+####################################
+# Node.js / Vite / pnpm
+####################################
+node_modules/
+
+# pnpm
+pnpm-lock.yaml
+.pnpm-store/
+
+# Vite
+dist/
+.vite/
+.cache/
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+
+####################################
+# Environment variables
+####################################
+.env
+.env.*
+!.env.example
+
+####################################
+# IDEs / Editors
+####################################
+.vscode/
+.idea/
+*.swp
+*.swo
+
+####################################
+# OS
+####################################
+.DS_Store
+Thumbs.db
+
+####################################
+# Docker (optional)
+####################################
+docker-compose.override.yml
+
+*.db
+
+credentials.json
+token.json
+backend/Submissions/*
