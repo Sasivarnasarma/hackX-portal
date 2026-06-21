@@ -131,3 +131,14 @@ def read_root(request: Request):
         "message": "Ah, you found the API. Now, what's your plan? 🙃",
         "dev": "Sasivarnasarma",
     }
+
+
+@app.api_route(
+    "/{path_name:path}",
+    methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+)
+@limiter.limit("10/minute")
+def catch_all_404(request: Request, path_name: str):
+    raise StarletteHTTPException(
+        status_code=404, detail=f"Path '/{path_name}' not found."
+    )
