@@ -854,11 +854,11 @@ const RegisterJr: React.FC = () => {
                         Edit Details
                       </button>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.8rem', textAlign: 'left', color: 'var(--color-text-muted)' }}>
-                      <div><strong style={{ color: '#ffffff' }}>Name:</strong> {jrData.name}</div>
-                      <div><strong style={{ color: '#ffffff' }}>Email:</strong> {jrData.email}</div>
-                      <div><strong style={{ color: '#ffffff' }}>Phone:</strong> {jrData.phone}</div>
-                      <div><strong style={{ color: '#ffffff' }}>DOB:</strong> {jrData.dob}</div>
+                    <div className="member-details-grid">
+                      <div><strong>Name</strong> {jrData.name}</div>
+                      <div><strong>Email</strong> {jrData.email}</div>
+                      <div><strong>Phone</strong> {jrData.phone}</div>
+                      <div><strong>DOB</strong> {jrData.dob}</div>
                     </div>
                   </div>
 
@@ -952,7 +952,7 @@ const RegisterJr: React.FC = () => {
                       {validationErrors.teacherName && <span className="form-error">{validationErrors.teacherName}</span>}
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="form-row">
                       <div className="form-group">
                         <label className="form-label" htmlFor="teacherPhone">Teacher Phone</label>
                         <input
@@ -1074,7 +1074,7 @@ const RegisterJr: React.FC = () => {
                           </button>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className="form-row">
                           <div className="form-group" style={{ marginBottom: '0.75rem' }}>
                             <input
                               id={`member-${i}-name`}

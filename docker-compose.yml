@@ -11,9 +11,6 @@ services:
       - "5272:8000"
     env_file:
       - ./backend/.env
-    volumes:
-      - ./backend/hackx.db:/app/hackx.db
-      - ./backend/log.log:/app/log.log
 
   frontend-user:
     build:

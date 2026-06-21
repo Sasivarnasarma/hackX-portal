@@ -781,11 +781,11 @@ const RegisterX: React.FC = () => {
                         Edit Details
                       </button>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.8rem', textAlign: 'left', color: 'var(--color-text-muted)' }}>
-                      <div><strong style={{ color: '#ffffff' }}>Name:</strong> {xData.name}</div>
-                      <div><strong style={{ color: '#ffffff' }}>Email:</strong> {xData.email}</div>
-                      <div><strong style={{ color: '#ffffff' }}>Phone:</strong> {xData.phone}</div>
-                      <div><strong style={{ color: '#ffffff' }}>NIC:</strong> {xData.nic}</div>
+                    <div className="member-details-grid">
+                      <div><strong>Name</strong> {xData.name}</div>
+                      <div><strong>Email</strong> {xData.email}</div>
+                      <div><strong>Phone</strong> {xData.phone}</div>
+                      <div><strong>NIC</strong> {xData.nic}</div>
                     </div>
                   </div>
 
@@ -909,7 +909,7 @@ const RegisterX: React.FC = () => {
                           </button>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className="form-row">
                           <div className="form-group" style={{ marginBottom: '0.75rem' }}>
                             <input
                               id={`member-${i}-name`}

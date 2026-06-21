@@ -68,7 +68,7 @@ const Home: React.FC = () => {
             src="/Logos/ministry Logo.png"
             alt="Ministry of Science & Technology"
             style={{
-              height: '65px',
+              height: '130px',
               width: 'auto',
               maxWidth: '100%',
               objectFit: 'contain',
