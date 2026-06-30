@@ -2,12 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, User, Key, Users, Check, AlertCircle, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, Users, Check, AlertCircle, ChevronDown } from 'lucide-react';
 import { useRegistration } from '../context/RegistrationContext';
 import { registrationAPI, getErrorMessage } from '../api/registration';
 import type { HackXJrMember } from '../api/registration';
 import OceanBackground from '../components/OceanBackground';
-import PremiumFooter from '../components/PremiumFooter';
+import '../components/RegistrationSplit.css';
+import { CinematicFooter } from '../components/ui/motion-footer';
 import TurnstileCaptcha from '../components/TurnstileCaptcha';
 
 const PHONE_PATTERN = /^07\d{8}$/;
@@ -40,11 +41,37 @@ const DISTRICTS_LIST = [
   { value: 'kegalle', label: 'Kegalle' }
 ];
 
+const JR_SOURCE_OPTIONS = [
+  { value: 'Social Media', label: 'Social Media' },
+  { value: 'Friends', label: 'Friends' },
+  { value: 'School/Teacher', label: 'School/Teacher' },
+  { value: 'Previous Participant', label: 'Previous Participant' },
+  { value: 'Other', label: 'Other' }
+];
+
 const RegisterJr: React.FC = () => {
   const navigate = useNavigate();
   const { jrData, updateJrData, clearJrData, clearXData } = useRegistration();
 
   const [currentStage, setCurrentStage] = useState(jrData.stage);
+
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePosition({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+
+
+  const itemVariants: any = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+  };
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -82,9 +109,15 @@ const RegisterJr: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const districtDropdownRef = useRef<HTMLDivElement>(null);
+  const sourceDropdownRef = useRef<HTMLDivElement>(null);
+  const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
 
   useEffect(() => {
     updateJrData({ stage: currentStage });
+    // Scroll to top when stage changes
+    setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }, 50);
   }, [currentStage, updateJrData]);
 
   // Sync Stage 3 fields to context/localStorage when they change
@@ -140,13 +173,27 @@ const RegisterJr: React.FC = () => {
       if (districtDropdownRef.current && !districtDropdownRef.current.contains(event.target as Node)) {
         setIsDistrictDropdownOpen(false);
       }
+      if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target as Node)) {
+        setIsSourceDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Scroll to top when registration is successful
+  useEffect(() => {
+    if (isSubmitted) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }, 50);
+    }
+  }, [isSubmitted]);
+
   // Handle stage 1 validation
   const validateStage1 = () => {
+
+
     const errors: Record<string, string> = {};
     if (!leaderName.trim()) errors.name = 'Name is required';
     if (!leaderEmail.trim()) {
@@ -171,6 +218,8 @@ const RegisterJr: React.FC = () => {
     e.preventDefault();
     setError(null);
     if (!validateStage1()) return;
+
+
 
     const emailChanged = leaderEmail.trim().toLowerCase() !== jrData.email.trim().toLowerCase();
     const hasVerifiedToken = !!jrData.verificationToken;
@@ -210,7 +259,7 @@ const RegisterJr: React.FC = () => {
 
         setResendTimer(60);
         setCurrentStage(2);
-      } catch (err) {
+      } catch (err: any) {
         setError(getErrorMessage(err));
       } finally {
         setIsLoading(false);
@@ -252,6 +301,8 @@ const RegisterJr: React.FC = () => {
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+
     const code = otp.join('');
     if (code.length !== 6) {
       setError('Please enter the complete 6-digit OTP code');
@@ -276,7 +327,8 @@ const RegisterJr: React.FC = () => {
       });
 
       setCurrentStage(3);
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Stage 2 verification error:', err);
       setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
@@ -297,7 +349,7 @@ const RegisterJr: React.FC = () => {
         purpose: 'hackx_jr_registration',
       });
       setResendTimer(60);
-    } catch (err) {
+    } catch (err: any) {
       setError(getErrorMessage(err));
     } finally {
       setIsResending(false);
@@ -443,6 +495,8 @@ const RegisterJr: React.FC = () => {
 
   // Stage 3 Validation
   const validateStage3 = () => {
+
+
     const errors: Record<string, string> = {};
     if (!teamName.trim()) errors.teamName = 'Team name is required';
     if (!schoolName.trim()) errors.schoolName = 'School name is required';
@@ -512,6 +566,9 @@ const RegisterJr: React.FC = () => {
     e.preventDefault();
     setError(null);
     if (!validateStage3()) return;
+    clearJrData();
+
+
 
     setIsLoading(true);
     try {
@@ -528,7 +585,7 @@ const RegisterJr: React.FC = () => {
             }, 100);
             return;
           }
-        } catch (err) {
+        } catch (err: any) {
           setError(getErrorMessage(err));
           setIsLoading(false);
           setTimeout(() => {
@@ -581,7 +638,7 @@ const RegisterJr: React.FC = () => {
       clearJrData();
       clearXData();
       navigate('/success');
-    } catch (err) {
+    } catch (err: any) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         setError('Your email verification session has expired. Please verify your email again.');
         setCurrentStage(1);
@@ -617,7 +674,7 @@ const RegisterJr: React.FC = () => {
         zIndex: 10,
         position: 'relative'
       }}>
-        <div style={{ width: '100%', maxWidth: '640px' }}>
+        <div style={{ width: '100%' }}>
           {/* Back button */}
           <a
             href="/"
@@ -629,73 +686,62 @@ const RegisterJr: React.FC = () => {
               textDecoration: 'none',
               position: 'relative',
               zIndex: 50,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              display: 'inline-flex'
             }}
           >
             <ArrowLeft size={16} /> Back to Hub
           </a>
 
           {/* Registration Container */}
-          <div className="glass-panel" style={{ padding: '2.5rem 2rem', position: 'relative', borderRadius: 'var(--radius-xl)' }}>
-              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-              <img src="/Logos/hackxJr-logo.webp" alt="hackX Jr logo" style={{ height: '35px', width: 'auto', marginBottom: '0.5rem' }} />
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 800, margin: 0, letterSpacing: '0.04em', color: 'var(--color-text-main)' }}>
-                hackX Jr. 9.0 Registration
-              </h2>
-              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginTop: '0.5rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                School Tier National Hackathon Series
-              </p>
-            </div>
+          <div className="ambient-glow-left" />
+          <div className="ambient-glow-right" />
+          <div className="split-container">
+            {/* Left Form Column */}
+            <div className="form-column" onMouseMove={handleMouseMove} style={{ "--mouse-x": `${mousePosition.x}px`, "--mouse-y": `${mousePosition.y}px` } as React.CSSProperties}>
+              <div className="mouse-spotlight" />
+              <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '0.04em', color: 'var(--color-text-main)' }}>
+                  hackX Jr. 9.0 Registration
+                </h2>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '0.5rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  Inter-School Innovation Competition
+                </p>
+              </div>
 
-            {/* Stepper */}
-            <div className="progress-stepper">
-              <div className={`step-item ${currentStage >= 1 ? 'active' : ''} ${currentStage > 1 ? 'completed' : ''}`}>
-                <div className="step-circle">
-                  {currentStage > 1 ? <Check size={16} /> : '1'}
+              {/* Progress Stepper */}
+              <div className="split-stepper">
+                <div className={`split-step ${currentStage >= 1 ? 'active' : ''} ${currentStage > 1 ? 'completed' : ''}`}>
+                  <div className="split-step-circle">{currentStage > 1 ? <Check size={14} /> : '1'}</div>
+                  <span className="split-step-label">Leader</span>
                 </div>
-                <span className="step-label">Leader</span>
-              </div>
-              <div className={`step-divider ${currentStage > 1 ? 'active' : ''}`} />
-              <div className={`step-item ${currentStage >= 2 ? 'active' : ''} ${currentStage > 2 ? 'completed' : ''}`}>
-                <div className="step-circle">
-                  {currentStage > 2 ? <Check size={16} /> : '2'}
+                <div className={`split-step-divider ${currentStage > 1 ? 'active' : ''}`} />
+                <div className={`split-step ${currentStage >= 2 ? 'active' : ''} ${currentStage > 2 ? 'completed' : ''}`}>
+                  <div className="split-step-circle">{currentStage > 2 ? <Check size={14} /> : '2'}</div>
+                  <span className="split-step-label">Verify</span>
                 </div>
-                <span className="step-label">Verify</span>
+                <div className={`split-step-divider ${currentStage > 2 ? 'active' : ''}`} />
+                <div className={`split-step ${currentStage === 3 ? 'active' : ''}`}>
+                  <div className="split-step-circle">3</div>
+                  <span className="split-step-label">Team</span>
+                </div>
               </div>
-              <div className={`step-divider ${currentStage > 2 ? 'active' : ''}`} />
-              <div className={`step-item ${currentStage >= 3 ? 'active' : ''}`}>
-                <div className="step-circle">3</div>
-                <span className="step-label">Team</span>
-              </div>
-            </div>
 
-            {/* Error Notification */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                style={{
-                  background: 'rgba(255, 107, 107, 0.1)',
-                  border: '1px solid #ff6b6b',
-                  borderRadius: '0.5rem',
-                  padding: '1rem',
-                  marginBottom: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  color: '#ff6b6b'
-                }}
-              >
-                <AlertCircle size={20} style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: '0.875rem', textAlign: 'left', whiteSpace: 'pre-line' }}>{error}</span>
-              </motion.div>
-            )}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{ background: 'rgba(255, 107, 107, 0.1)', border: '1px solid #ff6b6b', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#ff6b6b' }}
+                >
+                  <AlertCircle size={20} style={{ flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.875rem', textAlign: 'left', whiteSpace: 'pre-line' }}>{error}</span>
+                </motion.div>
+              )}
 
-            {/* Stage Layout Wrapper */}
-            <AnimatePresence mode="wait">
-              {/* STAGE 1: LEADER DETAILS */}
-              {currentStage === 1 && (
-                <motion.form
+              <AnimatePresence mode="wait">
+                {currentStage === 1 && (
+                  <motion.form
+                  className="form-grid-container"
                   key="stage1"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -706,7 +752,8 @@ const RegisterJr: React.FC = () => {
                     <User size={20} color="var(--color-accent)" /> Student Leader Details
                   </h3>
 
-                  <div className="form-group">
+                  <motion.div variants={itemVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div className="form-group">
                     <label className="form-label" htmlFor="leaderName">Full Name</label>
                     <input
                       className="form-input"
@@ -720,8 +767,7 @@ const RegisterJr: React.FC = () => {
                     />
                     {validationErrors.name && <span className="form-error">{validationErrors.name}</span>}
                   </div>
-
-                  <div className="form-group">
+                    <div className="form-group">
                     <label className="form-label" htmlFor="leaderEmail">Email Address</label>
                     <input
                       className="form-input"
@@ -734,8 +780,10 @@ const RegisterJr: React.FC = () => {
                     />
                     {validationErrors.email && <span className="form-error">{validationErrors.email}</span>}
                   </div>
+                  </motion.div>
 
-                  <div className="form-group">
+                  <motion.div variants={itemVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div className="form-group">
                     <label className="form-label" htmlFor="leaderPhone">Phone Number</label>
                     <input
                       className="form-input"
@@ -749,8 +797,7 @@ const RegisterJr: React.FC = () => {
                     />
                     {validationErrors.phone && <span className="form-error">{validationErrors.phone}</span>}
                   </div>
-
-                  <div className="form-group">
+                    <div className="form-group">
                     <label className="form-label" htmlFor="leaderDob">Date of Birth</label>
                     <input
                       className="form-input"
@@ -762,6 +809,7 @@ const RegisterJr: React.FC = () => {
                     />
                     {validationErrors.dob && <span className="form-error">{validationErrors.dob}</span>}
                   </div>
+                  </motion.div>
 
                   {/* Captcha */}
                   {needsCaptcha && <TurnstileCaptcha onVerify={setTurnstileToken} />}
@@ -770,11 +818,10 @@ const RegisterJr: React.FC = () => {
                     {isLoading ? <span className="spinner" /> : <>Continue to Verification <ArrowRight size={18} /></>}
                   </button>
                 </motion.form>
-              )}
-
-              {/* STAGE 2: OTP VERIFICATION */}
-              {currentStage === 2 && (
-                <motion.form
+                )}
+                {currentStage === 2 && (
+                  <motion.form
+                  className="form-grid-container"
                   key="stage2"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -782,7 +829,7 @@ const RegisterJr: React.FC = () => {
                   onSubmit={handleVerifyOTP}
                 >
                   <h3 style={{ fontFamily: 'var(--font-heading)', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                    <Key size={20} color="var(--color-accent)" /> Verify Your Email
+                    Verify Your Email
                   </h3>
                   <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
                     A 6-digit OTP code has been sent to <strong style={{ color: 'white' }}>{jrData.pendingEmail || leaderEmail}</strong>.
@@ -809,7 +856,7 @@ const RegisterJr: React.FC = () => {
                     {isLoading ? <span className="spinner" /> : <>Verify Code <Check size={18} /></>}
                   </button>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', fontSize: '0.875rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4rem', fontSize: '0.875rem' }}>
                     <button type="button" className="btn-secondary" onClick={handleBackToStage1} style={{ padding: '0.5rem 1rem' }}>
                       Edit Details
                     </button>
@@ -823,11 +870,10 @@ const RegisterJr: React.FC = () => {
                     )}
                   </div>
                 </motion.form>
-              )}
-
-              {/* STAGE 3: TEAM & MEMBER DETAILS */}
-              {currentStage === 3 && (
-                <motion.form
+                )}
+                {currentStage === 3 && (
+                  <motion.form
+                  className="form-grid-container"
                   key="stage3"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -862,7 +908,8 @@ const RegisterJr: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="form-group">
+                  <motion.div variants={itemVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} className="form-row-2">
+                    <div className="form-group">
                     <label className="form-label" htmlFor="teamName">Team Name</label>
                     <input
                       className="form-input"
@@ -876,8 +923,7 @@ const RegisterJr: React.FC = () => {
                     />
                     {validationErrors.teamName && <span className="form-error">{validationErrors.teamName}</span>}
                   </div>
-
-                  <div className="form-group">
+                    <div className="form-group">
                     <label className="form-label" htmlFor="schoolName">School Name</label>
                     <input
                       className="form-input"
@@ -891,6 +937,7 @@ const RegisterJr: React.FC = () => {
                     />
                     {validationErrors.schoolName && <span className="form-error">{validationErrors.schoolName}</span>}
                   </div>
+                  </motion.div>
 
                   {/* School District Dropdown */}
                   <div className="form-group" ref={districtDropdownRef} id="schoolDistrict">
@@ -952,7 +999,7 @@ const RegisterJr: React.FC = () => {
                       {validationErrors.teacherName && <span className="form-error">{validationErrors.teacherName}</span>}
                     </div>
 
-                    <div className="form-row">
+                    <motion.div variants={itemVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} className="form-row-2">
                       <div className="form-group">
                         <label className="form-label" htmlFor="teacherPhone">Teacher Phone</label>
                         <input
@@ -981,53 +1028,10 @@ const RegisterJr: React.FC = () => {
                         />
                         {validationErrors.teacherEmail && <span className="form-error">{validationErrors.teacherEmail}</span>}
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="expectations">What are your expectations from hackX Jr. 9.0? (Optional)</label>
-                    <textarea
-                      className="form-input"
-                      id="expectations"
-                      placeholder="Describe your expectations..."
-                      value={expectations}
-                      onChange={(e) => setExpectations(e.target.value)}
-                      rows={3}
-                      style={{ resize: 'vertical' }}
-                      onBlur={() => handleBlur('expectations', expectations)}
-                    />
-                    {validationErrors.expectations && <span className="form-error">{validationErrors.expectations}</span>}
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="source">How did you hear about hackX Jr? (Optional)</label>
-                    <input
-                      className="form-input"
-                      type="text"
-                      id="source"
-                      placeholder="e.g. School, Friends, Social Media"
-                      value={source}
-                      onChange={(e) => setSource(e.target.value)}
-                      maxLength={100}
-                      onBlur={() => handleBlur('source', source)}
-                    />
-                    {validationErrors.source && <span className="form-error">{validationErrors.source}</span>}
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="ambassadorCode">Ambassador Code (Optional)</label>
-                    <input
-                      className="form-input"
-                      type="text"
-                      id="ambassadorCode"
-                      placeholder="Enter referral code if applicable"
-                      value={ambassadorCode}
-                      onChange={(e) => setAmbassadorCode(e.target.value)}
-                      maxLength={20}
-                    />
-                  </div>
-
-                  {/* Dynamic Members Section */}
+                                    {/* Dynamic Members Section */}
                   <div style={{ marginTop: '1.5rem', marginBottom: '1rem', textAlign: 'left' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                       <h4 style={{ fontFamily: 'var(--font-heading)', margin: 0, fontSize: '1rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.04em' }}>
@@ -1074,7 +1078,7 @@ const RegisterJr: React.FC = () => {
                           </button>
                         </div>
 
-                        <div className="form-row">
+                        <motion.div variants={itemVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} className="form-row-2">
                           <div className="form-group" style={{ marginBottom: '0.75rem' }}>
                             <input
                               id={`member-${i}-name`}
@@ -1126,12 +1130,72 @@ const RegisterJr: React.FC = () => {
                             />
                             {validationErrors[`member-${i}-dob`] && <span className="form-error">{validationErrors[`member-${i}-dob`]}</span>}
                           </div>
-                        </div>
+                        </motion.div>
                       </motion.div>
                     ))}
                   </div>
 
-                  <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.75rem', marginTop: '1.5rem', cursor: 'pointer' }}>
+<div className="form-group">
+                    <label className="form-label" htmlFor="expectations">What are your expectations from hackX Jr. 9.0? (Optional)</label>
+                    <textarea
+                      className="form-input"
+                      id="expectations"
+                      placeholder="Describe your expectations..."
+                      value={expectations}
+                      onChange={(e) => setExpectations(e.target.value)}
+                      rows={3}
+                      style={{ resize: 'vertical' }}
+                      onBlur={() => handleBlur('expectations', expectations)}
+                    />
+                    {validationErrors.expectations && <span className="form-error">{validationErrors.expectations}</span>}
+                  </div>
+
+                  <div className="form-group" ref={sourceDropdownRef} id="source">
+                    <label className="form-label">How did you hear about hackX Jr? (Optional)</label>
+                    <div className="custom-select-wrapper">
+                      <div
+                        className={`custom-select-trigger ${isSourceDropdownOpen ? 'open' : ''}`}
+                        onClick={() => setIsSourceDropdownOpen(!isSourceDropdownOpen)}
+                      >
+                        <span>
+                          {JR_SOURCE_OPTIONS.find((s) => s.value === source)?.label || 'Select Option'}
+                        </span>
+                        <ChevronDown size={18} style={{ transform: isSourceDropdownOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
+                      </div>
+
+                      {isSourceDropdownOpen && (
+                        <div className="custom-options-list">
+                          {JR_SOURCE_OPTIONS.map((option) => (
+                            <div
+                              key={option.value}
+                              className={`custom-option ${source === option.value ? 'selected' : ''}`}
+                              onClick={() => {
+                                setSource(option.value);
+                                setIsSourceDropdownOpen(false);
+                              }}
+                            >
+                              {option.label}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="ambassadorCode">Ambassador Code (Optional)</label>
+                    <input
+                      className="form-input"
+                      type="text"
+                      id="ambassadorCode"
+                      placeholder="Enter referral code if applicable"
+                      value={ambassadorCode}
+                      onChange={(e) => setAmbassadorCode(e.target.value)}
+                      maxLength={20}
+                    />
+                  </div>
+
+                  <div className="form-group checkbox-container" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.75rem', marginTop: '1.5rem', cursor: 'pointer' }} onClick={() => setConsentShare(!consentShare)}>
                     <input
                       type="checkbox"
                       id="consentShare"
@@ -1148,13 +1212,50 @@ const RegisterJr: React.FC = () => {
                     {isLoading ? <span className="spinner" /> : <>Complete Registration <Check size={18} /></>}
                   </button>
                 </motion.form>
-              )}
-            </AnimatePresence>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Right Info Column */}
+            <div className="info-column">
+              <div className="info-logo-container">
+                <img src="/Logos/hackxJr-logo.webp" alt="hackX logo" className="info-logo" />
+              </div>
+              
+              <div className="info-content-wrapper">
+                <div className="info-content">
+                  <h4 className="info-step-title" style={{ marginBottom: '1.5rem', fontSize: '1.4rem' }}>Registration Guidelines</h4>
+                  <ul style={{ 
+                    color: 'var(--color-text-muted)', 
+                    fontSize: '0.95rem', 
+                    lineHeight: '1.6', 
+                    paddingLeft: '1.2rem',
+                    margin: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem'
+                  }}>
+                    <li>Ensure all required information is available before starting your registration.</li>
+                    <li>
+                      Provide accurate and up-to-date details for your team, including:
+                      <ul style={{ marginTop: '0.5rem', paddingLeft: '1.2rem', listStyleType: 'circle', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <li>Student Leader’s contact details</li>
+                        <li>School or educational institution</li>
+                        <li>Details of all team members</li>
+                      </ul>
+                    </li>
+                    <li>Only one team member, preferably the Student Leader, is required to complete the registration on behalf of the entire team.</li>
+                    <li>If you are registering as an individual participant, simply complete and verify the Student Leader Details section. Additional team member details are not required.</li>
+                    <li>Double-check all information before submitting, as it will be used for official communication, eligibility verification, and future competition updates.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+          </div>
       </main>
 
-      <PremiumFooter />
+      <CinematicFooter showCards={false} />
     </div>
   );
 };

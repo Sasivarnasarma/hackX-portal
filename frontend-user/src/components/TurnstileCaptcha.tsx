@@ -78,7 +78,7 @@ const TurnstileCaptcha: React.FC<TurnstileCaptchaProps> = ({ onVerify, theme = '
   }, [onVerify, theme]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '1rem 0' }}>
+    <div className="turnstile-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '1rem 0' }}>
       <div ref={containerRef} className="turnstile-widget"></div>
       {error && <span className="form-error" style={{ textAlign: 'center' }}>{error}</span>}
     </div>

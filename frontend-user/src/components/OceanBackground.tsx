@@ -1,5 +1,5 @@
 import React from 'react';
-import DottedSurface from './DottedSurface';
+
 
 const BUBBLES = Array.from({ length: 25 }).map((_, i) => {
   const size = ((i * 7 + 13) % 4) + 1.5;
@@ -22,8 +22,7 @@ const OceanBackground: React.FC = () => {
 
   return (
     <>
-      {/* Three.js dotted wave surface */}
-      <DottedSurface />
+      {/* Wavy dots surface removed */}
 
       {/* Ambient gradient blobs */}
       <div className="ocean-ambient">
@@ -41,4 +40,4 @@ const OceanBackground: React.FC = () => {
   );
 };
 
-export default OceanBackground;
+export default React.memo(OceanBackground);

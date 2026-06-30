@@ -1,0 +1,206 @@
+/* Sliding Form Container */
+.sliding-container {
+  display: flex;
+  position: relative;
+  width: 100%;
+  max-width: 1000px; /* Slightly wider to accommodate side-by-side forms comfortably */
+  margin: 0 auto;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  min-height: 600px;
+}
+
+/* Form Sides (Left & Right) */
+.sliding-side {
+  width: 50%;
+  padding: 3rem 2.5rem;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sliding-side-left {
+  /* No special styles needed, just structural */
+}
+
+.sliding-side-right {
+  /* No special styles needed, just structural */
+}
+
+/* Sliding Overlay Panel */
+.sliding-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  z-index: 20;
+  background: linear-gradient(135deg, rgba(4, 26, 58, 0.95), rgba(4, 26, 58, 0.8));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(91, 184, 255, 0.15);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.sliding-overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+.sliding-overlay-title {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+
+.sliding-overlay-subtitle {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0 0;
+  line-height: 1.5;
+}
+
+/* Progress Stepper specifically tailored for the sliding overlay */
+.overlay-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 200px;
+  margin-top: 1rem;
+}
+
+.overlay-step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.overlay-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  top: 2.25rem;
+  bottom: -1.25rem;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: var(--transition-smooth);
+}
+
+.overlay-step.completed:not(:last-child)::after {
+  background: linear-gradient(to bottom, var(--color-electric), var(--color-arc));
+}
+
+.overlay-step-circle {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition: var(--transition-smooth);
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.overlay-step.active .overlay-step-circle {
+  background: rgba(91, 184, 255, 0.15);
+  border-color: var(--color-arc);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(91, 184, 255, 0.2);
+}
+
+.overlay-step.completed .overlay-step-circle {
+  background: linear-gradient(135deg, var(--color-electric), var(--color-arc));
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.overlay-step-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: var(--transition-smooth);
+}
+
+.overlay-step.active .overlay-step-label {
+  color: var(--color-arc);
+}
+
+.overlay-step.completed .overlay-step-label {
+  color: #ffffff;
+}
+
+/* Empty State / Hidden Side */
+.sliding-side-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  opacity: 0.5; /* Just in case it peeks out during animation */
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+  .sliding-container {
+    flex-direction: column;
+    max-width: 600px;
+  }
+  
+  .sliding-side {
+    width: 100%;
+    padding: 2rem 1.5rem;
+  }
+  
+  .sliding-overlay {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-xl);
+    margin-bottom: 2rem;
+    padding: 2rem 1.5rem;
+  }
+
+  .overlay-stepper {
+    flex-direction: row;
+    max-width: 100%;
+    justify-content: space-between;
+  }
+
+  .overlay-step:not(:last-child)::after {
+    left: 2.25rem;
+    top: 1rem;
+    right: -1rem;
+    width: auto;
+    height: 2px;
+    bottom: auto;
+  }
+
+  .overlay-step-label {
+    display: none;
+  }
+}

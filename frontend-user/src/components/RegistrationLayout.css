@@ -1,0 +1,132 @@
+/* Registration Split Layout */
+.registration-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .registration-layout {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+
+.registration-left-panel {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+.registration-right-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .registration-right-panel {
+    width: 320px;
+    flex-shrink: 0;
+  }
+}
+
+/* Vertical Stepper inside Glass Panel */
+.stepper-square-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 1.5rem 1rem;
+  height: 100%;
+}
+
+.stepper-vertical-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  position: relative;
+  flex: 1;
+}
+
+.stepper-vertical-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 1.125rem;
+  top: 2.75rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: rgba(91, 184, 255, 0.2);
+  transition: var(--transition-smooth);
+}
+
+.stepper-vertical-item.completed:not(:last-child)::after {
+  background: linear-gradient(to bottom, var(--color-electric), var(--color-arc));
+  box-shadow: 0 0 10px rgba(26, 111, 212, 0.45);
+}
+
+.stepper-vertical-circle {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: rgba(4, 26, 58, 0.85);
+  border: 2px solid rgba(91, 184, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  transition: var(--transition-smooth);
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.stepper-vertical-item.current .stepper-vertical-circle {
+  border-color: var(--color-arc);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(91, 184, 255, 0.25);
+  background: rgba(26, 111, 212, 0.15);
+}
+
+.stepper-vertical-item.completed .stepper-vertical-circle {
+  background: linear-gradient(135deg, var(--color-electric), var(--color-arc));
+  border-color: var(--color-arc);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(91, 184, 255, 0.35);
+}
+
+.stepper-vertical-content {
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.25rem;
+}
+
+.stepper-vertical-label {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: var(--transition-smooth);
+}
+
+.stepper-vertical-item.current .stepper-vertical-label {
+  color: var(--color-arc);
+}
+
+.stepper-vertical-item.completed .stepper-vertical-label {
+  color: #ffffff;
+}
+
+.stepper-vertical-desc {
+  font-size: 0.75rem;
+  color: rgba(139, 163, 199, 0.6);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
