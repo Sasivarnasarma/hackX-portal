@@ -22,6 +22,38 @@ const X_SOURCE_OPTIONS = [
   { value: 'Other', label: 'Other' }
 ];
 
+const UNIVERSITIES_LIST = [
+  "University of Moratuwa",
+  "University of Kelaniya",
+  "University of Colombo",
+  "University of Peradeniya",
+  "University of Sri Jayewardenepura",
+  "University of Ruhuna",
+  "Sabaragamuwa University of Sri Lanka",
+  "Wayamba University of Sri Lanka",
+  "South Eastern University of Sri Lanka",
+  "Eastern University, Sri Lanka",
+  "Trincomalee Campus, Eastern University",
+  "Open University of Sri Lanka",
+  "University of Jaffna",
+  "University of Vavuniya",
+  "Rajarata University of Sri Lanka",
+  "Uva Wellassa University of Sri Lanka",
+  "University of Vocational Technology",
+  "General Sir John Kotelawala Defence University",
+  "Sri Lanka Institute of Information Technology (SLIIT)",
+  "NSBM Green University",
+  "Informatics Institute of Technology (IIT)",
+  "Java Institute for Advanced Technology",
+  "National Institute of Business Management (NIBM)",
+  "Asia Pacific Institute of Information Technology (APIIT)",
+  "International College of Business and Technology (ICBT)",
+  "SLT Mobitel Nebula Institute of Technology",
+  "KIU University",
+  "Sri Lanka Technological Campus (SLTC)",
+  "Institution of Chartered Accountants of Sri Lanka"
+];
+
 const RegisterX: React.FC = () => {
   const navigate = useNavigate();
   const { xData, updateXData, clearXData, clearJrData } = useRegistration();
@@ -40,9 +72,9 @@ const RegisterX: React.FC = () => {
 
 
 
-  const itemVariants: any = {
+  const itemVariants = {
     hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+    visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } }
   };
 
   const [error, setError] = useState<string | null>(null);
@@ -67,15 +99,29 @@ const RegisterX: React.FC = () => {
   const [teamName, setTeamName] = useState(xData.teamName || '');
   const [university, setUniversity] = useState(xData.university || '');
   const [expectations, setExpectations] = useState(xData.expectations || '');
-  const [source, setSource] = useState(xData.source || '');
+  const initialSource = X_SOURCE_OPTIONS.some(opt => opt.value === xData.source && opt.value !== 'Other')
+    ? (xData.source || '')
+    : (xData.source ? 'Other' : '');
+  const [source, setSource] = useState(initialSource);
+  const [otherSource, setOtherSource] = useState(
+    (xData.source === 'Other' || X_SOURCE_OPTIONS.some(opt => opt.value === xData.source && opt.value !== 'Other'))
+      ? ''
+      : (xData.source || '')
+  );
   const [ambassadorCode, setAmbassadorCode] = useState(xData.ambassadorCode || localStorage.getItem('hackx_ambassador_code') || '');
   const [consentShare, setConsentShare] = useState(xData.consentShare !== undefined ? xData.consentShare : true);
   const [additionalMembers, setAdditionalMembers] = useState<Omit<HackXMember, 'is_leader'>[]>(xData.additionalMembers || []);
+
+  const filteredUniversities = university.trim()
+    ? UNIVERSITIES_LIST.filter(univ => univ.toLowerCase().includes(university.trim().toLowerCase()))
+    : UNIVERSITIES_LIST;
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const sourceDropdownRef = useRef<HTMLDivElement>(null);
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
+  const [isUnivDropdownOpen, setIsUnivDropdownOpen] = useState(false);
+  const univContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     updateXData({ stage: currentStage });
@@ -91,12 +137,12 @@ const RegisterX: React.FC = () => {
       teamName,
       university,
       expectations,
-      source,
+      source: source === 'Other' ? (otherSource.trim() || 'Other') : source,
       ambassadorCode,
       consentShare,
       additionalMembers,
     });
-  }, [teamName, university, expectations, source, ambassadorCode, consentShare, additionalMembers, updateXData, isSubmitted]);
+  }, [teamName, university, expectations, source, otherSource, ambassadorCode, consentShare, additionalMembers, updateXData, isSubmitted]);
 
   // Resend OTP countdown
   useEffect(() => {
@@ -113,11 +159,15 @@ const RegisterX: React.FC = () => {
     }
   }, [currentStage]);
 
+
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target as Node)) {
         setIsSourceDropdownOpen(false);
+      }
+      if (univContainerRef.current && !univContainerRef.current.contains(event.target as Node)) {
+        setIsUnivDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -206,7 +256,7 @@ const RegisterX: React.FC = () => {
 
         setResendTimer(60);
         setCurrentStage(2);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(getErrorMessage(err));
       } finally {
         setIsLoading(false);
@@ -277,7 +327,7 @@ const RegisterX: React.FC = () => {
       });
 
       setCurrentStage(3);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Stage 2 verification error:', err);
       setError(getErrorMessage(err));
     } finally {
@@ -299,7 +349,7 @@ const RegisterX: React.FC = () => {
         purpose: 'hackx_registration',
       });
       setResendTimer(60);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
       setIsResending(false);
@@ -524,7 +574,7 @@ const RegisterX: React.FC = () => {
             }, 100);
             return;
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           setError(getErrorMessage(err));
           setIsLoading(false);
           setTimeout(() => {
@@ -549,7 +599,7 @@ const RegisterX: React.FC = () => {
         university: university.trim(),
         consent_share: consentShare,
         expectations: expectations.trim(),
-        source: source.trim(),
+        source: (source === 'Other' ? (otherSource.trim() || 'Other') : source).trim(),
         ambassador_code: ambassadorCode.trim() || undefined,
         verification_token: xData.verificationToken,
         members: [
@@ -574,7 +624,7 @@ const RegisterX: React.FC = () => {
       clearXData();
       clearJrData();
       navigate('/success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         // Verification token expired
         setError('Your email verification session has expired. Please verify your email again.');
@@ -865,16 +915,42 @@ const RegisterX: React.FC = () => {
                     </div>
                     <div className="form-group">
                       <label className="form-label" htmlFor="university">University / Institute</label>
-                      <input
-                        className="form-input"
-                        type="text"
-                        id="university"
-                        placeholder="e.g. University of Kelaniya"
-                        value={university}
-                        onChange={(e) => setUniversity(e.target.value)}
-                        maxLength={100}
-                        onBlur={() => handleBlur('university', university)}
-                      />
+                      <div className="custom-select-wrapper" ref={univContainerRef}>
+                        <input
+                          className="form-input"
+                          type="text"
+                          id="university"
+                          placeholder="e.g. University of Kelaniya"
+                          value={university}
+                          onChange={(e) => {
+                            setUniversity(e.target.value);
+                            setIsUnivDropdownOpen(true);
+                          }}
+                          onFocus={() => setIsUnivDropdownOpen(true)}
+                          maxLength={100}
+                          style={{ width: '100%' }}
+                          onBlur={() => handleBlur('university', university)}
+                        />
+                        {isUnivDropdownOpen && university.trim() !== '' && filteredUniversities.length > 0 && (
+                          <div className="custom-options-list" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                            {filteredUniversities.map((univ) => (
+                              <div
+                                key={univ}
+                                className={`custom-option ${university === univ ? 'selected' : ''}`}
+                                onClick={() => {
+                                  setUniversity(univ);
+                                  setIsUnivDropdownOpen(false);
+                                  const newErrors = { ...validationErrors };
+                                  delete newErrors.university;
+                                  setValidationErrors(newErrors);
+                                }}
+                              >
+                                {univ}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       {validationErrors.university && <span className="form-error">{validationErrors.university}</span>}
                     </div>
                   </motion.div>
@@ -1028,6 +1104,26 @@ const RegisterX: React.FC = () => {
                         </div>
                       )}
                     </div>
+
+                    {source === 'Other' && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="animate-fade-in"
+                        style={{ marginTop: '0.75rem', width: '100%' }}
+                      >
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="Please specify how you heard about us"
+                          value={otherSource}
+                          onChange={(e) => setOtherSource(e.target.value)}
+                          maxLength={100}
+                          style={{ width: '100%' }}
+                        />
+                      </motion.div>
+                    )}
                   </div>
 
                   <div className="form-group">

@@ -67,9 +67,9 @@ const RegisterJr: React.FC = () => {
 
 
 
-  const itemVariants: any = {
+  const itemVariants = {
     hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+    visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } }
   };
 
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +101,15 @@ const RegisterJr: React.FC = () => {
   const [teacherEmail, setTeacherEmail] = useState(jrData.teacherEmail || '');
 
   const [expectations, setExpectations] = useState(jrData.expectations || '');
-  const [source, setSource] = useState(jrData.source || '');
+  const initialSource = JR_SOURCE_OPTIONS.some(opt => opt.value === jrData.source && opt.value !== 'Other')
+    ? (jrData.source || '')
+    : (jrData.source ? 'Other' : '');
+  const [source, setSource] = useState(initialSource);
+  const [otherSource, setOtherSource] = useState(
+    (jrData.source === 'Other' || JR_SOURCE_OPTIONS.some(opt => opt.value === jrData.source && opt.value !== 'Other'))
+      ? ''
+      : (jrData.source || '')
+  );
   const [ambassadorCode, setAmbassadorCode] = useState(jrData.ambassadorCode || localStorage.getItem('hackx_ambassador_code') || '');
   const [consentShare, setConsentShare] = useState(jrData.consentShare !== undefined ? jrData.consentShare : true);
   const [additionalMembers, setAdditionalMembers] = useState<Omit<HackXJrMember, 'is_leader'>[]>(jrData.additionalMembers || []);
@@ -131,7 +139,7 @@ const RegisterJr: React.FC = () => {
       teacherPhone,
       teacherEmail,
       expectations,
-      source,
+      source: source === 'Other' ? (otherSource.trim() || 'Other') : source,
       ambassadorCode,
       consentShare,
       additionalMembers,
@@ -145,6 +153,7 @@ const RegisterJr: React.FC = () => {
     teacherEmail,
     expectations,
     source,
+    otherSource,
     ambassadorCode,
     consentShare,
     additionalMembers,
@@ -261,7 +270,7 @@ const RegisterJr: React.FC = () => {
 
         setResendTimer(60);
         setCurrentStage(2);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(getErrorMessage(err));
       } finally {
         setIsLoading(false);
@@ -330,7 +339,7 @@ const RegisterJr: React.FC = () => {
       });
 
       setCurrentStage(3);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Stage 2 verification error:', err);
       setError(getErrorMessage(err));
     } finally {
@@ -352,7 +361,7 @@ const RegisterJr: React.FC = () => {
         purpose: 'hackx_jr_registration',
       });
       setResendTimer(60);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
       setIsResending(false);
@@ -590,7 +599,7 @@ const RegisterJr: React.FC = () => {
             }, 100);
             return;
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           setError(getErrorMessage(err));
           setIsLoading(false);
           setTimeout(() => {
@@ -619,7 +628,7 @@ const RegisterJr: React.FC = () => {
         teacher_email: teacherEmail.trim().toLowerCase(),
         consent_share: consentShare,
         expectations: expectations.trim(),
-        source: source.trim(),
+        source: (source === 'Other' ? (otherSource.trim() || 'Other') : source).trim(),
         ambassador_code: ambassadorCode.trim() || undefined,
         verification_token: jrData.verificationToken,
         members: [
@@ -643,7 +652,7 @@ const RegisterJr: React.FC = () => {
       clearJrData();
       clearXData();
       navigate('/success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         setError('Your email verification session has expired. Please verify your email again.');
         setCurrentStage(1);
@@ -1185,6 +1194,26 @@ const RegisterJr: React.FC = () => {
                         </div>
                       )}
                     </div>
+
+                    {source === 'Other' && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="animate-fade-in"
+                        style={{ marginTop: '0.75rem', width: '100%' }}
+                      >
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="Please specify how you heard about us"
+                          value={otherSource}
+                          onChange={(e) => setOtherSource(e.target.value)}
+                          maxLength={100}
+                          style={{ width: '100%' }}
+                        />
+                      </motion.div>
+                    )}
                   </div>
 
                   <div className="form-group">

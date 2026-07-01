@@ -191,11 +191,11 @@ const MagneticButton = React.forwardRef<HTMLElement, MagneticButtonProps>(
           });
         };
 
-        element.addEventListener("mousemove", handleMouseMove as any);
+        element.addEventListener("mousemove", handleMouseMove as EventListener);
         element.addEventListener("mouseleave", handleMouseLeave);
 
         return () => {
-          element.removeEventListener("mousemove", handleMouseMove as any);
+          element.removeEventListener("mousemove", handleMouseMove as EventListener);
           element.removeEventListener("mouseleave", handleMouseLeave);
         };
       }, element);
@@ -206,9 +206,14 @@ const MagneticButton = React.forwardRef<HTMLElement, MagneticButtonProps>(
     return (
       <Component
         ref={(node: HTMLElement) => {
-          (localRef as any).current = node;
-          if (typeof forwardedRef === "function") forwardedRef(node);
-          else if (forwardedRef) (forwardedRef as any).current = node;
+          if (localRef) {
+            (localRef as React.MutableRefObject<HTMLElement | null>).current = node;
+          }
+          if (typeof forwardedRef === "function") {
+            forwardedRef(node);
+          } else if (forwardedRef) {
+            (forwardedRef as React.MutableRefObject<HTMLElement | null>).current = node;
+          }
         }}
         className={cn("cursor-pointer", className)}
         {...props}
@@ -321,7 +326,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                 {/* hackX 11.0 Card */}
                 <motion.a 
                   href="/x" 
-                  className="block no-underline w-full sm:w-auto flex justify-center"
+                  className="no-underline w-full sm:w-auto flex justify-center"
                   initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
                   whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   viewport={{ once: true, margin: "-50px" }}
@@ -344,7 +349,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                 {/* hackX Jr. 9.0 Card */}
                 <motion.a 
                   href="/jr" 
-                  className="block no-underline w-full sm:w-auto flex justify-center"
+                  className="no-underline w-full sm:w-auto flex justify-center"
                   initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
                   whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   viewport={{ once: true, margin: "-50px" }}
