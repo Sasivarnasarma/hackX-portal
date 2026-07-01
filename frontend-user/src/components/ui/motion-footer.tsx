@@ -295,24 +295,24 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
 
           {/* 2. Main Center Content */}
           {showCards && (
-            <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-32 md:pb-40 w-full max-w-5xl mx-auto">
+            <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 sm:px-6 pb-32 md:pb-40 w-full max-w-5xl mx-auto">
               <h2
               ref={headingRef}
-              className="text-5xl md:text-8xl font-black footer-text-glow tracking-tighter mb-12 text-center uppercase"
+              className="text-4xl sm:text-5xl md:text-8xl font-black footer-text-glow tracking-tighter mb-8 md:mb-12 text-center uppercase"
             >
               Ready to begin?
             </h2>
 
             {/* Interactive Magnetic Pills Layout */}
-            <div ref={linksRef} className="flex flex-col items-center gap-12 w-full mt-4">
+            <div ref={linksRef} className="flex flex-col items-center gap-8 md:gap-12 w-full mt-4">
               
               {/* Registration Cards */}
-              <div className="flex flex-wrap justify-center gap-8 md:gap-12 w-full max-w-6xl">
+              <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-6 sm:gap-8 md:gap-12 w-full max-w-6xl">
                 
                 {/* hackX 11.0 Card */}
                 <motion.a 
                   href="/x" 
-                  className="block no-underline"
+                  className="block no-underline w-full sm:w-auto"
                   initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
                   whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   viewport={{ once: true, margin: "-50px" }}
@@ -335,7 +335,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                 {/* hackX Jr. 9.0 Card */}
                 <motion.a 
                   href="/jr" 
-                  className="block no-underline"
+                  className="block no-underline w-full sm:w-auto"
                   initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
                   whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   viewport={{ once: true, margin: "-50px" }}

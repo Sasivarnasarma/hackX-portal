@@ -44,6 +44,12 @@
   height: 100%;
 }
 
+@media (max-width: 480px) {
+  .stepper-square-container {
+    padding: 1rem 0.75rem;
+  }
+}
+
 .stepper-vertical-item {
   display: flex;
   align-items: flex-start;

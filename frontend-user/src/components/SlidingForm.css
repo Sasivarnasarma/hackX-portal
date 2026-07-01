@@ -10,6 +10,12 @@
   min-height: 600px;
 }
 
+@media (max-width: 768px) {
+  .sliding-container {
+    min-height: 0;
+  }
+}
+
 /* Form Sides (Left & Right) */
 .sliding-side {
   width: 50%;
@@ -202,5 +208,15 @@
 
   .overlay-step-label {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .sliding-side {
+    padding: 1.25rem 1rem;
+  }
+
+  .sliding-overlay {
+    padding: 1.5rem 1rem;
   }
 }
