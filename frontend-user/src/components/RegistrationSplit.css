@@ -257,7 +257,7 @@
 /* Mobile Responsiveness */
 @media (max-width: 1024px) {
   .split-container {
-    flex-direction: column-reverse;
+    flex-direction: column;
   }
   
   .info-column {

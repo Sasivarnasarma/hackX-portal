@@ -110,7 +110,7 @@ const Success: React.FC = () => {
                   transition={{ delay: 0.4 }}
                   style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.6, margin: '0 0 2rem 0' }}
                 >
-                  Congratulations! Team <strong style={{ color: 'var(--color-arc)' }}>{teamName}</strong> has been successfully registered for <strong style={{ color: 'white' }}>{category}</strong>.
+                  Congratulations! Team <strong style={{ color: 'var(--color-arc)' }}>{teamName}</strong> has been successfully registered for <strong style={{ color: 'white' }}>{category === 'hackX Jr' ? 'hackX Jr. 9.0' : 'hackX 11.0'}</strong>.
                 </motion.p>
 
                 {/* Next steps timeline */}
@@ -275,7 +275,7 @@ const Success: React.FC = () => {
                     cursor: 'pointer'
                   }}
                 >
-                  Return to Hub
+                  Return to Homepage
                 </motion.a>
               </motion.div>
             </div>

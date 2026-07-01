@@ -128,6 +128,19 @@ const STYLES = `
   background-clip: text;
   filter: drop-shadow(0px 0px 20px color-mix(in oklch, var(--foreground) 15%, transparent));
 }
+
+/* Top-fade mask — shorter on mobile so heading stays visible */
+.cinematic-footer-wrapper {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 150px);
+  mask-image: linear-gradient(to bottom, transparent 0px, black 150px);
+}
+@media (max-width: 768px) {
+  .cinematic-footer-wrapper {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
 `;
 
 // -------------------------------------------------------------------------
@@ -272,11 +285,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
       */}
       <div
         ref={wrapperRef}
-        className={`relative w-full flex flex-col justify-between overflow-hidden bg-background text-foreground cinematic-footer-wrapper ${showCards ? 'min-h-screen' : 'min-h-[40vh] mt-20'}`}
-        style={{
-          maskImage: 'linear-gradient(to bottom, transparent 0px, black 150px)',
-          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0px, black 150px)'
-        }}
+        className={`relative w-full flex flex-col justify-between overflow-hidden bg-background text-foreground cinematic-footer-wrapper ${showCards ? 'min-h-screen' : 'min-h-[20vh] mt-6'}`}
       >
           
           {/* Ambient Light & Grid Background */}
@@ -295,7 +304,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
 
           {/* 2. Main Center Content */}
           {showCards && (
-            <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 sm:px-6 pb-32 md:pb-40 w-full max-w-5xl mx-auto">
+            <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 sm:px-6 pb-0 sm:pb-32 md:pb-40 pt-8 sm:pt-0 w-full max-w-5xl mx-auto">
               <h2
               ref={headingRef}
               className="text-4xl sm:text-5xl md:text-8xl font-black footer-text-glow tracking-tighter mb-8 md:mb-12 text-center uppercase"
@@ -312,7 +321,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                 {/* hackX 11.0 Card */}
                 <motion.a 
                   href="/x" 
-                  className="block no-underline w-full sm:w-auto"
+                  className="block no-underline w-full sm:w-auto flex justify-center"
                   initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
                   whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   viewport={{ once: true, margin: "-50px" }}
@@ -335,7 +344,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                 {/* hackX Jr. 9.0 Card */}
                 <motion.a 
                   href="/jr" 
-                  className="block no-underline w-full sm:w-auto"
+                  className="block no-underline w-full sm:w-auto flex justify-center"
                   initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
                   whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   viewport={{ once: true, margin: "-50px" }}

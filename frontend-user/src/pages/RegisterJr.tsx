@@ -194,6 +194,7 @@ const RegisterJr: React.FC = () => {
   const validateStage1 = () => {
 
 
+
     const errors: Record<string, string> = {};
     if (!leaderName.trim()) errors.name = 'Name is required';
     if (!leaderEmail.trim()) {
@@ -218,6 +219,7 @@ const RegisterJr: React.FC = () => {
     e.preventDefault();
     setError(null);
     if (!validateStage1()) return;
+
 
 
 
@@ -301,6 +303,7 @@ const RegisterJr: React.FC = () => {
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
 
 
     const code = otp.join('');
@@ -497,6 +500,7 @@ const RegisterJr: React.FC = () => {
   const validateStage3 = () => {
 
 
+
     const errors: Record<string, string> = {};
     if (!teamName.trim()) errors.teamName = 'Team name is required';
     if (!schoolName.trim()) errors.schoolName = 'School name is required';
@@ -567,6 +571,7 @@ const RegisterJr: React.FC = () => {
     setError(null);
     if (!validateStage3()) return;
     clearJrData();
+
 
 
 
@@ -1033,12 +1038,12 @@ const RegisterJr: React.FC = () => {
 
                                     {/* Dynamic Members Section */}
                   <div style={{ marginTop: '1.5rem', marginBottom: '1rem', textAlign: 'left' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                       <h4 style={{ fontFamily: 'var(--font-heading)', margin: 0, fontSize: '1rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.04em' }}>
                         Additional Members ({additionalMembers.length + 1} / 5)
                       </h4>
                       {additionalMembers.length < 4 && (
-                        <button type="button" className="btn-secondary" onClick={addMemberField} style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>
+                        <button type="button" className="btn-secondary" onClick={addMemberField} style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
                           + Add Member
                         </button>
                       )}
