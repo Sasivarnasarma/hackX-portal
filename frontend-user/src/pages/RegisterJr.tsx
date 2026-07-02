@@ -206,7 +206,6 @@ const RegisterJr: React.FC = () => {
   const validateStage1 = () => {
 
 
-
     const errors: Record<string, string> = {};
     if (!leaderName.trim()) errors.name = 'Name is required';
     if (!leaderEmail.trim()) {
@@ -512,7 +511,6 @@ const RegisterJr: React.FC = () => {
   const validateStage3 = () => {
 
 
-
     const errors: Record<string, string> = {};
     if (!teamName.trim()) errors.teamName = 'Team name is required';
     if (!schoolName.trim()) errors.schoolName = 'School name is required';
@@ -679,7 +677,7 @@ const RegisterJr: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
+    <div className="hackx-jr-theme" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
       <OceanBackground />
 
       <main style={{
@@ -790,7 +788,7 @@ const RegisterJr: React.FC = () => {
                       className="form-input"
                       type="email"
                       id="leaderEmail"
-                      placeholder="e.g. student@school.com"
+                      placeholder="example@email.com"
                       value={leaderEmail}
                       onChange={(e) => setLeaderEmail(e.target.value)}
                       onBlur={() => handleBlur('email', leaderEmail)}

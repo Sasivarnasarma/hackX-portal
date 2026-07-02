@@ -357,7 +357,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                   whileHover={{ y: -8 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="hub-card cursor-pointer w-full">
+                  <div className="hub-card hackx-jr-theme cursor-pointer w-full" onClick={() => window.location.href = '/jr'}>
                     <div className="hub-card-badge">School Tier</div>
                     <div className="hub-card-logo-container">
                       <img src="/Logos/hackxJr-logo.webp" alt="hackX Jr. 9.0" className="hub-card-logo" />

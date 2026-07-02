@@ -190,7 +190,6 @@ const RegisterX: React.FC = () => {
   const validateStage1 = () => {
 
 
-
     const errors: Record<string, string> = {};
     if (!leaderName.trim()) errors.name = 'Name is required';
     if (!leaderEmail.trim()) {
@@ -486,7 +485,6 @@ const RegisterX: React.FC = () => {
 
   // Stage 3 Validation
   const validateStage3 = () => {
-
 
 
     const errors: Record<string, string> = {};

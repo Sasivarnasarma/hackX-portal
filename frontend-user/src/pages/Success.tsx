@@ -35,6 +35,12 @@ const LinkedinIcon: React.FC = () => (
   </svg>
 );
 
+const WhatsappIcon: React.FC = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+  </svg>
+);
+
 interface SuccessState {
   teamName: string;
   category: 'hackX' | 'hackX Jr';
@@ -55,8 +61,15 @@ const Success: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
+  const isJr = category === 'hackX Jr';
+  const arcRgb = isJr ? '114, 229, 248' : '91, 184, 255';
+  const voidRgb = isJr ? '1, 14, 19' : '1, 8, 20';
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
+    <div 
+      className={isJr ? 'hackx-jr-theme' : ''}
+      style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}
+    >
 
       <main style={{
         flex: 1,
@@ -119,7 +132,7 @@ const Success: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
                   style={{
-                    background: 'rgba(1, 8, 20, 0.35)',
+                    background: `rgba(${voidRgb}, 0.35)`,
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
                     border: '1px solid rgba(255, 255, 255, 0.06)',
@@ -190,7 +203,7 @@ const Success: React.FC = () => {
                         top: '26px',
                         bottom: '-1.5rem',
                         width: '2px',
-                        background: 'linear-gradient(to bottom, var(--color-electric), rgba(91, 184, 255, 0.1))',
+                        background: `linear-gradient(to bottom, var(--color-electric), rgba(${arcRgb}, 0.1))`,
                         zIndex: -1
                       }} />
                       <div style={{
@@ -239,18 +252,27 @@ const Success: React.FC = () => {
                           Join our social media to get instant updates:
                         </p>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                          <a href={category === 'hackX' ? "https://www.linkedin.com/company/hackxuok/" : "https://www.linkedin.com/company/hackx-junior/"} target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: 'rgba(91, 184, 255, 0.05)', border: '1px solid rgba(91, 184, 255, 0.15)', padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
+                          <a href={isJr ? "https://www.linkedin.com/company/hackx-junior/" : "https://www.linkedin.com/company/hackxuok/"} target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: `rgba(${arcRgb}, 0.05)`, border: `1px solid rgba(${arcRgb}, 0.15)`, padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
                             <LinkedinIcon /> LinkedIn
                           </a>
-                          <a href="https://facebook.com/imhackx" target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: 'rgba(91, 184, 255, 0.05)', border: '1px solid rgba(91, 184, 255, 0.15)', padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
+                          <a href={isJr ? "https://www.facebook.com/share/1DArK9JoVH/?mibextid=wwXIfr" : "https://facebook.com/imhackx"} target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: `rgba(${arcRgb}, 0.05)`, border: `1px solid rgba(${arcRgb}, 0.15)`, padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
                             <FacebookIcon /> Facebook
                           </a>
-                          <a href="https://instagram.com/hackx_uok" target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: 'rgba(91, 184, 255, 0.05)', border: '1px solid rgba(91, 184, 255, 0.15)', padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
-                            <InstagramIcon /> Instagram
-                          </a>
-                          <a href="https://youtube.com/@hackX_UoK" target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: 'rgba(91, 184, 255, 0.05)', border: '1px solid rgba(91, 184, 255, 0.15)', padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
-                            <YoutubeIcon /> YouTube
-                          </a>
+                          {isJr && (
+                            <a href="https://chat.whatsapp.com/B5EpWJsyeprHjGLILWXxoj?mode=gi_t" target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: `rgba(${arcRgb}, 0.05)`, border: `1px solid rgba(${arcRgb}, 0.15)`, padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
+                              <WhatsappIcon /> WhatsApp
+                            </a>
+                          )}
+                          {!isJr && (
+                            <>
+                              <a href="https://instagram.com/hackx_uok" target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: `rgba(${arcRgb}, 0.05)`, border: `1px solid rgba(${arcRgb}, 0.15)`, padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
+                                <InstagramIcon /> Instagram
+                              </a>
+                              <a href="https://youtube.com/@hackX_UoK" target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: `rgba(${arcRgb}, 0.05)`, border: `1px solid rgba(${arcRgb}, 0.15)`, padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
+                                <YoutubeIcon /> YouTube
+                              </a>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
