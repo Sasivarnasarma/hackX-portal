@@ -341,7 +341,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                     </div>
                     <div className="flex flex-col items-center text-center">
                       <h3 className="hub-card-title text-foreground">hackX 11.0</h3>
-                      <p className="hub-card-desc text-muted-foreground">Sri Lanka's premier university-tier national hackathon series</p>
+                      <p className="hub-card-desc text-muted-foreground">Sri Lanka's premier inter-university startup challenge</p>
                     </div>
                   </div>
                 </motion.a>
@@ -364,7 +364,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                     </div>
                     <div className="flex flex-col items-center text-center">
                       <h3 className="hub-card-title text-foreground">hackX Jr. 9.0</h3>
-                      <p className="hub-card-desc text-muted-foreground">The ultimate technology battleground for school-tier innovators</p>
+                      <p className="hub-card-desc text-muted-foreground">The ultimate inter-school innovation competiton</p>
                     </div>
                   </div>
                 </motion.a>

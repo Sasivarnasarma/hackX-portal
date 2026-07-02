@@ -50,6 +50,9 @@ const JR_SOURCE_OPTIONS = [
 ];
 
 const RegisterJr: React.FC = () => {
+  useEffect(() => {
+    document.title = "hackX Jr. 9.0 Registration Portal";
+  }, []);
   const navigate = useNavigate();
   const { jrData, updateJrData, clearJrData, clearXData } = useRegistration();
 
@@ -766,7 +769,7 @@ const RegisterJr: React.FC = () => {
                     <User size={20} color="var(--color-accent)" /> Student Leader Details
                   </h3>
 
-                  <motion.div variants={itemVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                  <motion.div variants={itemVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} className="form-row-2">
                     <div className="form-group">
                     <label className="form-label" htmlFor="leaderName">Full Name</label>
                     <input
@@ -796,7 +799,7 @@ const RegisterJr: React.FC = () => {
                   </div>
                   </motion.div>
 
-                  <motion.div variants={itemVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                  <motion.div variants={itemVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} className="form-row-2">
                     <div className="form-group">
                     <label className="form-label" htmlFor="leaderPhone">Phone Number</label>
                     <input
