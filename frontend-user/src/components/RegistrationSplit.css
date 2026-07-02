@@ -123,6 +123,7 @@
   position: sticky;
   top: 2rem;
   height: calc(100vh - 4rem);
+  overflow-y: auto;
   align-self: flex-start;
 }
 
@@ -136,8 +137,8 @@
 .info-logo-container {
   display: flex;
   justify-content: center;
-  margin-bottom: 2.5rem;
-  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -265,8 +266,9 @@
     min-width: 0;
     max-width: 100%;
     position: static;
-    height: auto;
-    min-height: auto;
+    height: max-content !important;
+    min-height: max-content !important;
+    overflow: visible;
   }
 
   .info-content-wrapper {

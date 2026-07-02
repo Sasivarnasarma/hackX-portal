@@ -1261,7 +1261,7 @@ const RegisterJr: React.FC = () => {
               
               <div className="info-content-wrapper">
                 <div className="info-content">
-                  <h4 className="info-step-title" style={{ marginBottom: '1.5rem', fontSize: '1.4rem' }}>Registration Guidelines</h4>
+                  <h4 className="info-step-title" style={{ marginBottom: '1rem', fontSize: '1.4rem' }}>Registration Guidelines</h4>
                   <ul style={{ 
                     color: 'var(--color-text-muted)', 
                     fontSize: '0.95rem', 
@@ -1270,7 +1270,7 @@ const RegisterJr: React.FC = () => {
                     margin: 0,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '1rem'
+                    gap: '0.75rem'
                   }}>
                     <li>Ensure all required information is available before starting your registration.</li>
                     <li>
