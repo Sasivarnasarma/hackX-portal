@@ -491,7 +491,8 @@ async def send_otp_email(
     heading = "Confirm Your Email Address"
     description = f"Use the verification OTP code below to confirm your email for {purpose.replace('_', ' ')}. This code will expire in 10 minutes."
 
-    template = load_template("otp_email.html")
+    template_name = "otp_email_jr.html" if domain == "hackx_jr" else "otp_email_x.html"
+    template = load_template(template_name)
     if template:
         body = template.replace("{{OTP_CODE}}", otp)
         body = body.replace("{{heading}}", heading)
