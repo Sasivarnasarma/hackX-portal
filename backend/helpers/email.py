@@ -579,14 +579,14 @@ async def send_welcome_jr_email(
         m_phone = html.escape(m.phone)
         m_email = html.escape(m.email) if m.email else "N/A"
         leader_badge = (
-            '<span style="font-size: 10px; background: rgba(26, 111, 212, 0.15); color: #5BB8FF; border: 1px solid rgba(91, 184, 255, 0.3); padding: 2px 8px; border-radius: 20px; font-weight: 700; margin-left: 8px;">LEADER</span>'
+            '<span style="font-size: 10px; background: rgba(24, 160, 192, 0.15); color: #72E5F8; border: 1px solid rgba(114, 229, 248, 0.3); padding: 2px 8px; border-radius: 20px; font-weight: 700; margin-left: 8px;">LEADER</span>'
             if m.is_leader
             else ""
         )
         members_html += f"""
-        <div style="background-color: #020F2B; border: 1px solid rgba(91, 184, 255, 0.2); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+        <div style="background-color: rgba(10, 92, 114, 0.12); border: 1px solid rgba(24, 160, 192, 0.25); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
             <p style="margin: 0 0 4px; font-size: 14px; font-weight: bold; color: #f0f4ff;">{m_name}{leader_badge}</p>
-            <p style="margin: 0; font-size: 12px; color: #8ba3c7;">DOB: {m_dob} | Phone: {m_phone} | Email: {m_email}</p>
+            <p style="margin: 0; font-size: 12px; color: rgba(114, 229, 248, 0.7);">DOB: {m_dob} | Phone: {m_phone} | Email: {m_email}</p>
         </div>
         """
 
