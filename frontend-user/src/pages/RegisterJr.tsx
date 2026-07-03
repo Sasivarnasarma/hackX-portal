@@ -218,6 +218,8 @@ const RegisterJr: React.FC = () => {
     }
     if (!leaderDob.trim()) {
       errors.dob = 'Date of birth is required';
+    } else if (new Date(leaderDob) > new Date()) {
+      errors.dob = 'Date of birth cannot be in the future';
     }
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -426,6 +428,8 @@ const RegisterJr: React.FC = () => {
     } else if (field === 'dob') {
       if (!value.trim()) {
         newErrors.dob = 'Date of birth is required';
+      } else if (new Date(value) > new Date()) {
+        newErrors.dob = 'Date of birth cannot be in the future';
       } else {
         delete newErrors.dob;
       }
@@ -496,6 +500,8 @@ const RegisterJr: React.FC = () => {
       } else if (subfield === 'dob') {
         if (!value.trim()) {
           newErrors[field] = 'Date of birth is required';
+        } else if (new Date(value) > new Date()) {
+          newErrors[field] = 'Date of birth cannot be in the future';
         } else {
           delete newErrors[field];
         }
@@ -554,6 +560,8 @@ const RegisterJr: React.FC = () => {
 
       if (!member.dob.trim()) {
         errors[`${mPrefix}dob`] = 'Date of birth is required';
+      } else if (new Date(member.dob) > new Date()) {
+        errors[`${mPrefix}dob`] = 'Date of birth cannot be in the future';
       }
     });
 
