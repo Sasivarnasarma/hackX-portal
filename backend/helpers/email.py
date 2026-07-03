@@ -487,7 +487,7 @@ async def send_otp_email(
     domain: str,
     force_provider: Optional[str] = None,
 ) -> str:
-    subject = "Verify Your Email - HackX OTP Code"
+    subject = "Verify Your Email - hackX OTP Code"
     heading = "Confirm Your Email Address"
     description = f"Use the verification OTP code below to confirm your email for {purpose.replace('_', ' ')}. This code will expire in 10 minutes."
 
@@ -521,7 +521,7 @@ async def send_welcome_x_email(
     university_name: str,
     members: list,
 ):
-    subject = f"Welcome to HackX 11.0! Team {team_name} Registered Successfully"
+    subject = f"Welcome to hackX 11.0! Team {team_name} Registered Successfully"
 
     members_html = ""
     for i, m in enumerate(members):
@@ -549,7 +549,7 @@ async def send_welcome_x_email(
     else:
         body = f"""
         <div style="font-family: sans-serif; padding: 20px;">
-            <h2>Registration Successful - HackX 11.0</h2>
+            <h2>Registration Successful - hackX 11.0</h2>
             <p>Congratulations, your team <strong>{html.escape(team_name)}</strong> from <strong>{html.escape(university_name)}</strong> has been registered successfully!</p>
             <h3>Team Roster:</h3>
             {members_html}
@@ -570,7 +570,7 @@ async def send_welcome_jr_email(
     teacher_email: Optional[str],
     members: list,
 ):
-    subject = f"Welcome to HackX Jr. 9.0! Team {team_name} Registered Successfully"
+    subject = f"Welcome to hackX Jr. 9.0! Team {team_name} Registered Successfully"
 
     members_html = ""
     for i, m in enumerate(members):
@@ -606,7 +606,7 @@ async def send_welcome_jr_email(
     else:
         body = f"""
         <div style="font-family: sans-serif; padding: 20px;">
-            <h2>Registration Successful - HackX Jr. 9.0</h2>
+            <h2>Registration Successful - hackX Jr. 9.0</h2>
             <p>Congratulations, your school team <strong>{html.escape(team_name)}</strong> from <strong>{html.escape(school_name)} ({html.escape(school_district)})</strong> has been registered successfully!</p>
             <p>Teacher in Charge: {t_name} ({t_phone} / {t_email})</p>
             <h3>Team Roster:</h3>

@@ -157,7 +157,7 @@ async def register_hackx_team(
 
     return {
         "status": "success",
-        "message": "Team successfully registered for HackX 11.0!",
+        "message": "Team successfully registered for hackX 11.0!",
     }
 
 

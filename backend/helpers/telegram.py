@@ -40,7 +40,7 @@ async def send_telegram_notification(text: str):
 
 
 def format_telegram_x_registration(team, members):
-    message = "🚀 *New HackX 11.0 Registration!* 🚀\n\n"
+    message = "🚀 *New hackX 11.0 Registration!* 🚀\n\n"
     message += f"🏆 *Team Name:* `{_escape_md(team.name)}`\n"
     message += f"🎓 *University:* `{_escape_md(team.university)}`\n"
     message += (
@@ -63,7 +63,7 @@ def format_telegram_x_registration(team, members):
 
 
 def format_telegram_jr_registration(team, members):
-    message = "🎒 *New HackX Jr 9.0 Registration!* 🎒\n\n"
+    message = "🎒 *New hackX Jr 9.0 Registration!* 🎒\n\n"
     message += f"🏆 *Team Name:* `{_escape_md(team.name)}`\n"
     message += f"🏫 *School:* `{_escape_md(team.school_name)}`\n"
     message += f"📍 *District:* `{_escape_md(team.school_district.upper())}`\n"

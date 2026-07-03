@@ -91,7 +91,7 @@ is_dev = env == "development"
 logger.info(f"Active application environment: {env.upper()} (is_dev={is_dev})")
 
 app = FastAPI(
-    title="HackX 2026 Registration Backend",
+    title="hackX 2026 Registration Backend",
     openapi_url="/openapi.json" if is_dev else None,
     docs_url="/docs" if is_dev else None,
     redoc_url="/redoc" if is_dev else None,

@@ -54,7 +54,7 @@ async def send_otp(
         if existing:
             raise HTTPException(
                 status_code=400,
-                detail="This email address is already registered in a HackX 11.0 team.",
+                detail="This email address is already registered in a hackX 11.0 team.",
             )
     elif body.purpose == "hackx_jr_registration":
         result = await db.execute(
@@ -64,7 +64,7 @@ async def send_otp(
         if existing:
             raise HTTPException(
                 status_code=400,
-                detail="This email address is already registered in a HackX Jr. 9.0 team.",
+                detail="This email address is already registered in a hackX Jr. 9.0 team.",
             )
 
     # 4. Generate/Throttling logic
