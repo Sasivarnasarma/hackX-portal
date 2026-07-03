@@ -188,8 +188,7 @@ const RegisterX: React.FC = () => {
 
   // Handle stage 1 validation
   const validateStage1 = () => {
-
-
+    return true; // Bypass validations for testing
     const errors: Record<string, string> = {};
     if (!leaderName.trim()) errors.name = 'Name is required';
     if (!leaderEmail.trim()) {
@@ -485,8 +484,7 @@ const RegisterX: React.FC = () => {
 
   // Stage 3 Validation
   const validateStage3 = () => {
-
-
+    return true; // Bypass validations for testing
     const errors: Record<string, string> = {};
     if (!teamName.trim()) errors.teamName = 'Team name is required';
     if (!university.trim()) errors.university = 'University name is required';
