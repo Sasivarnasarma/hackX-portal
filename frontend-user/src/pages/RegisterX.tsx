@@ -818,7 +818,7 @@ const RegisterX: React.FC = () => {
                   <h3 style={{ fontFamily: 'var(--font-heading)', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                     Verify Your Email
                   </h3>
-                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem', textAlign: 'center' }}>
                     A 6-digit OTP code has been sent to <strong style={{ color: 'white' }}>{xData.pendingEmail || leaderEmail}</strong>.
                   </p>
 
