@@ -111,7 +111,7 @@ const RegisterX: React.FC = () => {
       ? ''
       : (xData.source || '')
   );
-  const [ambassadorCode, setAmbassadorCode] = useState(xData.ambassadorCode || localStorage.getItem('hackx_ambassador_code') || '');
+  const ambassadorCode = xData.ambassadorCode || localStorage.getItem('hackx_ambassador_code') || '';
   const [consentShare, setConsentShare] = useState(xData.consentShare !== undefined ? xData.consentShare : true);
   const [additionalMembers, setAdditionalMembers] = useState<Omit<HackXMember, 'is_leader'>[]>(xData.additionalMembers || []);
 
@@ -558,30 +558,7 @@ const RegisterX: React.FC = () => {
 
     setIsLoading(true);
     try {
-      if (ambassadorCode.trim()) {
-        try {
-          const verifyRes = await registrationAPI.verifyAmbassador(ambassadorCode.trim());
-          if (!verifyRes.valid) {
-            setError('Invalid Ambassador Code. Please check or clear the code.');
-            setIsLoading(false);
-            setTimeout(() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              document.documentElement.scrollTop = 0;
-              document.body.scrollTop = 0;
-            }, 100);
-            return;
-          }
-        } catch (err: unknown) {
-          setError(getErrorMessage(err));
-          setIsLoading(false);
-          setTimeout(() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            document.documentElement.scrollTop = 0;
-            document.body.scrollTop = 0;
-          }, 100);
-          return;
-        }
-      }
+
 
       const leader: HackXMember = {
         name: xData.name,
@@ -1123,18 +1100,7 @@ const RegisterX: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="ambassadorCode">Ambassador Code (Optional)</label>
-                    <input
-                      className="form-input"
-                      type="text"
-                      id="ambassadorCode"
-                      placeholder="Enter referral code if applicable"
-                      value={ambassadorCode}
-                      onChange={(e) => setAmbassadorCode(e.target.value)}
-                      maxLength={20}
-                    />
-                  </div>
+
 
                   <div className="form-group checkbox-container" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.75rem', marginTop: '1.5rem', cursor: 'pointer' }} onClick={() => setConsentShare(!consentShare)}>
                     <input
