@@ -185,6 +185,9 @@ class HackXJrRegisterSchema(BaseModel):
                     raise ValueError(f"Duplicate member email detected: '{m.email}'")
                 emails.add(e_lower)
 
+            if not (2006 <= m.dob.year <= 2015):
+                raise ValueError(f"Member '{m.name}' must be born between 2006 and 2015.")
+
         # 4. District validation and lowercasing
         district_lower = self.school_district.strip().lower()
         if district_lower not in DISTRICTS:

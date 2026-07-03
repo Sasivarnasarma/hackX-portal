@@ -229,10 +229,8 @@ const RegisterJr: React.FC = () => {
     }
     if (!leaderDob.trim()) {
       errors.dob = 'Date of birth is required';
-    } else if (new Date(leaderDob) > new Date()) {
-      errors.dob = 'Date of birth cannot be in the future';
-    } else if (calculateAge(leaderDob) < 11) {
-      errors.dob = 'Competitors must be over 11 years old';
+    } else if (new Date(leaderDob).getFullYear() < 2006 || new Date(leaderDob).getFullYear() > 2015) {
+      errors.dob = 'Competitors must be born between 2006 and 2015';
     }
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -441,10 +439,8 @@ const RegisterJr: React.FC = () => {
     } else if (field === 'dob') {
       if (!value.trim()) {
         newErrors.dob = 'Date of birth is required';
-      } else if (new Date(value) > new Date()) {
-        newErrors.dob = 'Date of birth cannot be in the future';
-      } else if (calculateAge(value) < 11) {
-        newErrors.dob = 'Competitors must be over 11 years old';
+      } else if (new Date(value).getFullYear() < 2006 || new Date(value).getFullYear() > 2015) {
+        newErrors.dob = 'Competitors must be born between 2006 and 2015';
       } else {
         delete newErrors.dob;
       }
@@ -515,10 +511,8 @@ const RegisterJr: React.FC = () => {
       } else if (subfield === 'dob') {
         if (!value.trim()) {
           newErrors[field] = 'Date of birth is required';
-        } else if (new Date(value) > new Date()) {
-          newErrors[field] = 'Date of birth cannot be in the future';
-        } else if (calculateAge(value) < 11) {
-          newErrors[field] = 'Competitors must be over 11 years old';
+        } else if (new Date(value).getFullYear() < 2006 || new Date(value).getFullYear() > 2015) {
+          newErrors[field] = 'Competitors must be born between 2006 and 2015';
         } else {
           delete newErrors[field];
         }
@@ -577,10 +571,8 @@ const RegisterJr: React.FC = () => {
 
       if (!member.dob.trim()) {
         errors[`${mPrefix}dob`] = 'Date of birth is required';
-      } else if (new Date(member.dob) > new Date()) {
-        errors[`${mPrefix}dob`] = 'Date of birth cannot be in the future';
-      } else if (calculateAge(member.dob) < 11) {
-        errors[`${mPrefix}dob`] = 'Competitors must be over 11 years old';
+      } else if (new Date(member.dob).getFullYear() < 2006 || new Date(member.dob).getFullYear() > 2015) {
+        errors[`${mPrefix}dob`] = 'Competitors must be born between 2006 and 2015';
       }
     });
 
