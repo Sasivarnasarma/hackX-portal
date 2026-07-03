@@ -49,6 +49,17 @@ const JR_SOURCE_OPTIONS = [
   { value: 'Other', label: 'Other' }
 ];
 
+const calculateAge = (birthDateString: string): number => {
+  const today = new Date();
+  const birthDate = new Date(birthDateString);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+  }
+  return age;
+};
+
 const RegisterJr: React.FC = () => {
   useEffect(() => {
     document.title = "hackX Jr. 9.0 Registration Portal";
@@ -220,6 +231,8 @@ const RegisterJr: React.FC = () => {
       errors.dob = 'Date of birth is required';
     } else if (new Date(leaderDob) > new Date()) {
       errors.dob = 'Date of birth cannot be in the future';
+    } else if (calculateAge(leaderDob) < 11) {
+      errors.dob = 'Competitors must be over 11 years old';
     }
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -430,6 +443,8 @@ const RegisterJr: React.FC = () => {
         newErrors.dob = 'Date of birth is required';
       } else if (new Date(value) > new Date()) {
         newErrors.dob = 'Date of birth cannot be in the future';
+      } else if (calculateAge(value) < 11) {
+        newErrors.dob = 'Competitors must be over 11 years old';
       } else {
         delete newErrors.dob;
       }
@@ -502,6 +517,8 @@ const RegisterJr: React.FC = () => {
           newErrors[field] = 'Date of birth is required';
         } else if (new Date(value) > new Date()) {
           newErrors[field] = 'Date of birth cannot be in the future';
+        } else if (calculateAge(value) < 11) {
+          newErrors[field] = 'Competitors must be over 11 years old';
         } else {
           delete newErrors[field];
         }
@@ -562,6 +579,8 @@ const RegisterJr: React.FC = () => {
         errors[`${mPrefix}dob`] = 'Date of birth is required';
       } else if (new Date(member.dob) > new Date()) {
         errors[`${mPrefix}dob`] = 'Date of birth cannot be in the future';
+      } else if (calculateAge(member.dob) < 11) {
+        errors[`${mPrefix}dob`] = 'Competitors must be over 11 years old';
       }
     });
 
