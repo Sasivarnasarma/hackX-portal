@@ -493,8 +493,6 @@ body::before {
   outline: none;
   transition: var(--transition-smooth);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .form-input:focus {
@@ -1444,4 +1442,12 @@ input[type="checkbox"]:focus-visible {
   color: #72E5F8;
   background: rgba(114, 229, 248, 0.1);
   border: 1px solid rgba(114, 229, 248, 0.2);
+}
+
+/* Mobile-specific form input fix */
+@media (max-width: 768px) {
+  .form-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
 }
