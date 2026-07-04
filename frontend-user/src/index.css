@@ -1316,7 +1316,7 @@ input[type="checkbox"]:focus-visible {
     flex-wrap: wrap;
     gap: 0.5rem;
   }
-}
+}
 /* ── hackX Jr Theme Override ────────────────────────────────── */
 .hackx-jr-theme {
   --color-void: #010E13;
@@ -1449,5 +1449,15 @@ input[type="checkbox"]:focus-visible {
   .form-input {
     width: 100%;
     box-sizing: border-box;
+  }
+
+  /* Center the Date of Birth value; WebKit renders it via this pseudo-element,
+     so text-align on the input alone isn't enough on iOS/Android. */
+  .form-input[type="date"] {
+    text-align: center;
+  }
+
+  .form-input[type="date"]::-webkit-date-and-time-value {
+    text-align: center;
   }
 }
