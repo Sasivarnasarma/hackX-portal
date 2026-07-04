@@ -672,36 +672,17 @@ const RegisterJr: React.FC = () => {
                   </div>
                     <div className="form-group">
                       <label className="form-label" htmlFor="leaderDob">Date of Birth</label>
-                      <div style={{ position: 'relative', width: '100%' }}>
-                        <input
-                          className={`form-input ${!leaderDob ? 'empty-date-input' : ''}`}
-                          style={{ width: '100%', cursor: 'pointer' }}
-                          type="date"
-                          id="leaderDob"
-                          value={leaderDob}
-                          onChange={(e) => setLeaderDob(e.target.value)}
-                          onBlur={() => handleBlur('dob', leaderDob)}
-                          onClick={(e) => {
-                            try {
-                              (e.target as HTMLInputElement).showPicker();
-                            } catch {}
-                          }}
-                        />
-                        {!leaderDob && (
-                          <div style={{
-                            position: 'absolute',
-                            left: '1rem',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: 'rgba(255, 255, 255, 0.4)',
-                            pointerEvents: 'none',
-                            fontFamily: 'var(--font-body)',
-                            fontSize: '0.95rem',
-                          }}>
-                            Select Date of Birth
-                          </div>
-                        )}
-                      </div>
+                      <input
+                        className={`form-input ${!leaderDob ? 'empty-date-input' : ''}`}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                        type="date"
+                        id="leaderDob"
+                        value={leaderDob}
+                        min="2006-01-01"
+                        max="2015-12-31"
+                        onChange={(e) => setLeaderDob(e.target.value)}
+                        onBlur={() => handleBlur('dob', leaderDob)}
+                      />
                       {validationErrors.dob && <span className="form-error">{validationErrors.dob}</span>}
                     </div>
                   </motion.div>
@@ -962,36 +943,17 @@ const RegisterJr: React.FC = () => {
                           </div>
 
                           <div className="form-group" style={{ marginBottom: '0.75rem' }}>
-                            <div style={{ position: 'relative', width: '100%' }}>
-                              <input
-                                id={`member-${i}-dob`}
-                                className={`form-input ${!member.dob ? 'empty-date-input' : ''}`}
-                                style={{ width: '100%', cursor: 'pointer' }}
-                                type="date"
-                                value={member.dob}
-                                onChange={(e) => updateMemberField(i, 'dob', e.target.value)}
-                                onBlur={() => handleBlur(`member-${i}-dob`, member.dob)}
-                                onClick={(e) => {
-                                  try {
-                                    (e.target as HTMLInputElement).showPicker();
-                                  } catch {}
-                                }}
-                              />
-                              {!member.dob && (
-                                <div style={{
-                                  position: 'absolute',
-                                  left: '1rem',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  color: 'rgba(255, 255, 255, 0.4)',
-                                  pointerEvents: 'none',
-                                  fontFamily: 'var(--font-body)',
-                                  fontSize: '0.95rem',
-                                }}>
-                                  Date of Birth
-                                </div>
-                              )}
-                            </div>
+                            <input
+                              id={`member-${i}-dob`}
+                              className={`form-input ${!member.dob ? 'empty-date-input' : ''}`}
+                              style={{ width: '100%', cursor: 'pointer' }}
+                              type="date"
+                              value={member.dob}
+                              min="2006-01-01"
+                              max="2015-12-31"
+                              onChange={(e) => updateMemberField(i, 'dob', e.target.value)}
+                              onBlur={() => handleBlur(`member-${i}-dob`, member.dob)}
+                            />
                             {validationErrors[`member-${i}-dob`] && <span className="form-error">{validationErrors[`member-${i}-dob`]}</span>}
                           </div>
                         </motion.div>

@@ -511,24 +511,24 @@ body::before {
 /* Date input fix for dark theme */
 .form-input[type="date"] {
   color-scheme: dark;
+  color: #ffffff;
 }
 .form-input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.7) sepia(0.5) hue-rotate(180deg);
+  cursor: pointer;
 }
 .form-input[type="date"]::-webkit-date-and-time-value {
   color: #ffffff;
-  min-height: 1.2em;
+  min-height: 1.5em;
+  text-align: left;
 }
 
-/* Hide native desktop placeholder text when date input is empty */
-.form-input[type="date"].empty-date-input {
-  color: transparent !important;
-}
+/* Empty state: use placeholder color for the edit fields (desktop WebKit only) */
 .form-input[type="date"].empty-date-input::-webkit-datetime-edit-text,
 .form-input[type="date"].empty-date-input::-webkit-datetime-edit-month-field,
 .form-input[type="date"].empty-date-input::-webkit-datetime-edit-day-field,
 .form-input[type="date"].empty-date-input::-webkit-datetime-edit-year-field {
-  color: transparent !important;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .form-error {
@@ -1470,14 +1470,17 @@ input[type="checkbox"]:focus-visible {
     box-sizing: border-box;
   }
 
-  /* Center the Date of Birth value; WebKit renders it via this pseudo-element,
-     so text-align on the input alone isn't enough on iOS/Android. */
+  /* On real mobile browsers, keep date input left-aligned and visible.
+     Do NOT use text-align: center — it causes the picker icon to overlap the value
+     on iOS Safari and Android Chrome (unlike DevTools simulation). */
   .form-input[type="date"] {
-    text-align: center;
+    text-align: left;
+    color: #ffffff;
   }
 
   .form-input[type="date"]::-webkit-date-and-time-value {
-    text-align: center;
+    text-align: left;
     color: #ffffff;
+    min-height: 1.5em;
   }
 }
