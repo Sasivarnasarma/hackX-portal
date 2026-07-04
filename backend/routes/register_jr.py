@@ -35,7 +35,7 @@ async def register_hackx_jr_team(
     if not verified_email:
         raise HTTPException(
             status_code=401,
-            detail="Invalid or expired verification session. Please verify your email via OTP again.",
+            detail="Invalid or expired verification session. Please complete the CAPTCHA verification again.",
         )
 
     # 2. Match verified email with leader email
@@ -46,8 +46,9 @@ async def register_hackx_jr_team(
     ):
         raise HTTPException(
             status_code=400,
-            detail="The email verified via OTP must belong to the designated team leader.",
+            detail="The email verified via CAPTCHA must belong to the designated team leader.",
         )
+    leader_email = leader_member.email.strip().lower()
 
     # 3. Check duplicate Team Name
     team_check = await db.execute(
@@ -147,7 +148,7 @@ async def register_hackx_jr_team(
     else:
         background_tasks.add_task(
             send_welcome_jr_email,
-            verified_email,
+            leader_email,
             new_team.name,
             new_team.school_name,
             new_team.school_district,

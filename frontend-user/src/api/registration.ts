@@ -83,6 +83,18 @@ export interface HackXJrRegisterPayload {
   members: HackXJrMember[];
 }
 
+export interface VerifyCaptchaPayload {
+  email: string;
+  turnstile_token: string;
+  purpose: 'hackx_registration' | 'hackx_jr_registration';
+}
+
+export interface VerifyCaptchaResponse {
+  status: string;
+  message: string;
+  verification_token: string;
+}
+
 export const registrationAPI = {
   sendOTP: async (payload: SendOTPPayload): Promise<SendOTPResponse> => {
     const response = await api.post<SendOTPResponse>('/otp/send', payload);
@@ -96,6 +108,11 @@ export const registrationAPI = {
 
   verifyOTP: async (payload: VerifyOTPPayload): Promise<VerifyOTPResponse> => {
     const response = await api.post<VerifyOTPResponse>('/otp/verify', payload);
+    return response.data;
+  },
+
+  verifyCaptcha: async (payload: VerifyCaptchaPayload): Promise<VerifyCaptchaResponse> => {
+    const response = await api.post<VerifyCaptchaResponse>('/otp/verify-captcha', payload);
     return response.data;
   },
 

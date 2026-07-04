@@ -18,7 +18,7 @@ from helpers.security import (
 from helpers.turnstile import verify_turnstile
 from models.hackx import HackXMember
 from models.hackx_jr import HackXJrMember
-from schemas.otp import ResendOTPRequest, SendOTPRequest, VerifyOTPRequest
+from schemas.otp import ResendOTPRequest, SendOTPRequest, VerifyOTPRequest, VerifyCaptchaRequest
 
 logger = logging.getLogger(__name__)
 
@@ -226,5 +226,53 @@ async def verify_otp(
     return {
         "status": "success",
         "message": "OTP verified successfully.",
+        "verification_token": token,
+    }
+
+
+@router.post("/verify-captcha")
+@limiter.limit("5/minute")
+async def verify_captcha_only(
+    body: VerifyCaptchaRequest, request: Request, db: AsyncSession = Depends(get_db)
+):
+    logger.info(f"Direct verification token request for {body.email} (purpose: {body.purpose})")
+
+    # 1. Verify Turnstile Captcha
+    client_ip = request.client.host if request.client else None
+    turnstile_ok = await verify_turnstile(body.turnstile_token, client_ip)
+    if not turnstile_ok:
+        raise HTTPException(
+            status_code=400, detail="CAPTCHA verification failed. Please try again."
+        )
+
+    # 2. Check Purpose
+    if body.purpose not in ["hackx_registration", "hackx_jr_registration"]:
+        raise HTTPException(status_code=400, detail="Invalid verification purpose.")
+
+    # 3. Duplicate checks
+    if body.purpose == "hackx_registration":
+        result = await db.execute(
+            select(HackXMember).where(HackXMember.email == body.email)
+        )
+        if result.scalars().first():
+            raise HTTPException(
+                status_code=400,
+                detail="This email address is already registered in a hackX 11.0 team.",
+            )
+    elif body.purpose == "hackx_jr_registration":
+        result = await db.execute(
+            select(HackXJrMember).where(HackXJrMember.email == body.email)
+        )
+        if result.scalars().first():
+            raise HTTPException(
+                status_code=400,
+                detail="This email address is already registered in a hackX Jr. 9.0 team.",
+            )
+
+    # 4. Generate token
+    token = create_verification_token(body.email)
+    return {
+        "status": "success",
+        "message": "CAPTCHA verified successfully. Session verification token issued.",
         "verification_token": token,
     }

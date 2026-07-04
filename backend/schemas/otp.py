@@ -24,3 +24,11 @@ class ResendOTPRequest(BaseModel):
     purpose: str = Field(
         ..., description="Must be 'hackx_registration' or 'hackx_jr_registration'"
     )
+
+
+class VerifyCaptchaRequest(BaseModel):
+    email: EmailStr
+    turnstile_token: str
+    purpose: str = Field(
+        ..., description="Must be 'hackx_registration' or 'hackx_jr_registration'"
+    )
