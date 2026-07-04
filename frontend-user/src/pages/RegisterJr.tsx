@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, User, Users, Check, AlertCircle, ChevronDown } from 'lucide-react';
@@ -57,7 +56,8 @@ const RegisterJr: React.FC = () => {
   const navigate = useNavigate();
   const { jrData, updateJrData, clearJrData, clearXData } = useRegistration();
 
-  const [currentStage, setCurrentStage] = useState(jrData.stage);
+  // Stage 2 (OTP) was removed; guard against any stale persisted stage.
+  const [currentStage, setCurrentStage] = useState(jrData.stage === 2 ? 1 : jrData.stage);
 
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
@@ -85,14 +85,6 @@ const RegisterJr: React.FC = () => {
   const [leaderEmail, setLeaderEmail] = useState(jrData.email || jrData.pendingEmail);
   const [leaderPhone, setLeaderPhone] = useState(jrData.phone);
   const [leaderDob, setLeaderDob] = useState(jrData.dob);
-
-  const needsCaptcha = !jrData.verificationToken || leaderEmail !== jrData.email;
-
-  // Stage 2: OTP
-  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
-  const [resendTimer, setResendTimer] = useState(60);
-  const [isResending, setIsResending] = useState(false);
-  const otpRefs = useRef<HTMLInputElement[]>([]);
 
   // Stage 3: Team Details
   const [teamName, setTeamName] = useState(jrData.teamName || '');
@@ -165,21 +157,6 @@ const RegisterJr: React.FC = () => {
     isSubmitted,
   ]);
 
-  // Resend OTP countdown
-  useEffect(() => {
-    if (currentStage === 2 && resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [currentStage, resendTimer]);
-
-  // Auto focus first OTP input on step 2
-  useEffect(() => {
-    if (currentStage === 2) {
-      setTimeout(() => otpRefs.current[0]?.focus(), 100);
-    }
-  }, [currentStage]);
-
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -226,149 +203,20 @@ const RegisterJr: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // Submit Stage 1 (Send OTP)
-  const handleSendOTP = async (e: React.FormEvent) => {
+  // Submit Stage 1 (proceed to team details — OTP verification removed)
+  const handleLeaderContinue = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     if (!validateStage1()) return;
 
-
-
-
-    const emailChanged = leaderEmail.trim().toLowerCase() !== jrData.email.trim().toLowerCase();
-    const hasVerifiedToken = !!jrData.verificationToken;
-
-    if (!emailChanged && hasVerifiedToken) {
-      updateJrData({
-        name: leaderName.trim(),
-        phone: leaderPhone.trim(),
-        dob: leaderDob.trim(),
-      });
-      setCurrentStage(3);
-    } else {
-      if (needsCaptcha && !turnstileToken) {
-        setError('Please complete the CAPTCHA verification');
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        if (emailChanged) {
-          updateJrData({ verificationToken: '' });
-        }
-
-        const res = await registrationAPI.sendOTP({
-          email: leaderEmail.trim().toLowerCase(),
-          turnstile_token: turnstileToken || '1x00000000000000000000AA',
-          purpose: 'hackx_jr_registration',
-        });
-
-        updateJrData({
-          pendingEmail: leaderEmail.trim().toLowerCase(),
-          name: leaderName.trim(),
-          phone: leaderPhone.trim(),
-          dob: leaderDob.trim(),
-          captchaSessionToken: res.captcha_session_token,
-        });
-
-        setResendTimer(60);
-        setCurrentStage(2);
-      } catch (err: unknown) {
-        setError(getErrorMessage(err));
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  // OTP Change handler
-  const handleOtpChange = (index: number, val: string) => {
-    if (!/^\d*$/.test(val)) return;
-
-    const newOtp = [...otp];
-    if (val.length > 1) {
-      const pasted = val.slice(0, 6).split('');
-      pasted.forEach((char, i) => {
-        if (index + i < 6) newOtp[index + i] = char;
-      });
-      setOtp(newOtp);
-      const nextIndex = Math.min(index + pasted.length, 5);
-      otpRefs.current[nextIndex]?.focus();
-      return;
-    }
-
-    newOtp[index] = val;
-    setOtp(newOtp);
-
-    if (val && index < 5) {
-      otpRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
-  };
-
-  // Submit Stage 2 (Verify OTP)
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-
-
-    const code = otp.join('');
-    if (code.length !== 6) {
-      setError('Please enter the complete 6-digit OTP code');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const verifyEmail = jrData.pendingEmail || leaderEmail;
-      const res = await registrationAPI.verifyOTP({
-        email: verifyEmail,
-        otp: code,
-        captcha_session_token: jrData.captchaSessionToken,
-        purpose: 'hackx_jr_registration',
-      });
-
-      updateJrData({
-        email: verifyEmail,
-        pendingEmail: '',
-        verificationToken: res.verification_token,
-        captchaSessionToken: '',
-      });
-
-      setCurrentStage(3);
-    } catch (err: unknown) {
-      console.error('Stage 2 verification error:', err);
-      setError(getErrorMessage(err));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Resend OTP
-  const handleResendOTP = async () => {
-    if (resendTimer > 0 || isResending) return;
-    setError(null);
-    setIsResending(true);
-
-    try {
-      const verifyEmail = jrData.pendingEmail || leaderEmail;
-      await registrationAPI.resendOTP({
-        email: verifyEmail,
-        captcha_session_token: jrData.captchaSessionToken,
-        purpose: 'hackx_jr_registration',
-      });
-      setResendTimer(60);
-    } catch (err: unknown) {
-      setError(getErrorMessage(err));
-    } finally {
-      setIsResending(false);
-    }
+    updateJrData({
+      email: leaderEmail.trim().toLowerCase(),
+      pendingEmail: '',
+      name: leaderName.trim(),
+      phone: leaderPhone.trim(),
+      dob: leaderDob.trim(),
+    });
+    setCurrentStage(3);
   };
 
   // Manage additional members
@@ -585,6 +433,11 @@ const RegisterJr: React.FC = () => {
     e.preventDefault();
     setError(null);
     if (!validateStage3()) return;
+    if (!turnstileToken) {
+      setError('Please complete the CAPTCHA verification.');
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+      return;
+    }
     clearJrData();
 
 
@@ -613,7 +466,7 @@ const RegisterJr: React.FC = () => {
         expectations: expectations.trim(),
         source: (source === 'Other' ? (otherSource.trim() || 'Other') : source).trim(),
         ambassador_code: ambassadorCode.trim() || undefined,
-        verification_token: jrData.verificationToken,
+        turnstile_token: turnstileToken,
         members: [
           leader,
           ...additionalMembers.map((m) => ({
@@ -636,13 +489,7 @@ const RegisterJr: React.FC = () => {
       clearXData();
       navigate('/success');
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        setError('Your email verification session has expired. Please verify your email again.');
-        setCurrentStage(1);
-        updateJrData({ verificationToken: '' });
-      } else {
-        setError(getErrorMessage(err));
-      }
+      setError(getErrorMessage(err));
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         document.documentElement.scrollTop = 0;
@@ -651,11 +498,6 @@ const RegisterJr: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleBackToStage1 = () => {
-    setError(null);
-    setCurrentStage(1);
   };
 
   return (
@@ -713,13 +555,8 @@ const RegisterJr: React.FC = () => {
                   <span className="split-step-label">Leader</span>
                 </div>
                 <div className={`split-step-divider ${currentStage > 1 ? 'active' : ''}`} />
-                <div className={`split-step ${currentStage >= 2 ? 'active' : ''} ${currentStage > 2 ? 'completed' : ''}`}>
-                  <div className="split-step-circle">{currentStage > 2 ? <Check size={14} /> : '2'}</div>
-                  <span className="split-step-label">Verify</span>
-                </div>
-                <div className={`split-step-divider ${currentStage > 2 ? 'active' : ''}`} />
                 <div className={`split-step ${currentStage === 3 ? 'active' : ''}`}>
-                  <div className="split-step-circle">3</div>
+                  <div className="split-step-circle">2</div>
                   <span className="split-step-label">Team</span>
                 </div>
               </div>
@@ -743,7 +580,7 @@ const RegisterJr: React.FC = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  onSubmit={handleSendOTP}
+                  onSubmit={handleLeaderContinue}
                 >
                   <h3 style={{ fontFamily: 'var(--font-heading)', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                     <User size={20} color="var(--color-accent)" /> Student Leader Details
@@ -808,64 +645,9 @@ const RegisterJr: React.FC = () => {
                   </div>
                   </motion.div>
 
-                  {/* Captcha */}
-                  {needsCaptcha && <TurnstileCaptcha onVerify={setTurnstileToken} />}
-
                   <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={isLoading}>
-                    {isLoading ? <span className="spinner" /> : <>Continue to Verification <ArrowRight size={18} /></>}
+                    {isLoading ? <span className="spinner" /> : <>Continue to Team Details <ArrowRight size={18} /></>}
                   </button>
-                </motion.form>
-                )}
-                {currentStage === 2 && (
-                  <motion.form
-                  className="form-grid-container"
-                  key="stage2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  onSubmit={handleVerifyOTP}
-                >
-                  <h3 style={{ fontFamily: 'var(--font-heading)', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                    Verify Your Email
-                  </h3>
-                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-                    A 6-digit OTP code has been sent to <strong style={{ color: 'white' }}>{jrData.pendingEmail || leaderEmail}</strong>.
-                  </p>
-
-                  <div className="otp-inputs">
-                    {otp.map((digit, index) => (
-                      <input
-                        key={index}
-                        ref={(el) => { otpRefs.current[index] = el!; }}
-                        className="form-input otp-box"
-                        type="text"
-                        maxLength={6}
-                        value={digit}
-                        onChange={(e) => handleOtpChange(index, e.target.value)}
-                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                      />
-                    ))}
-                  </div>
-
-                  <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={isLoading}>
-                    {isLoading ? <span className="spinner" /> : <>Verify Code <Check size={18} /></>}
-                  </button>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4rem', fontSize: '0.875rem' }}>
-                    <button type="button" className="btn-secondary" onClick={handleBackToStage1} style={{ padding: '0.5rem 1rem' }}>
-                      Edit Details
-                    </button>
-
-                    {resendTimer > 0 ? (
-                      <span style={{ color: 'var(--color-text-muted)' }}>Resend OTP in {resendTimer}s</span>
-                    ) : (
-                      <button type="button" className="btn-secondary" onClick={handleResendOTP} disabled={isResending} style={{ padding: '0.5rem 1rem' }}>
-                        {isResending ? 'Sending...' : 'Resend OTP'}
-                      </button>
-                    )}
-                  </div>
                 </motion.form>
                 )}
                 {currentStage === 3 && (
@@ -1211,6 +993,8 @@ const RegisterJr: React.FC = () => {
                       I agree to share the submitted details with potential sponsors and organizers.
                     </label>
                   </div>
+
+                  <TurnstileCaptcha onVerify={setTurnstileToken} />
 
                   <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1.5rem' }} disabled={isLoading}>
                     {isLoading ? <span className="spinner" /> : <>Complete Registration <Check size={18} /></>}

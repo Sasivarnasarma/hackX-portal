@@ -136,7 +136,7 @@ class HackXJrRegisterSchema(BaseModel):
     expectations: Optional[str] = Field(None, max_length=1000)
     source: Optional[str] = Field(None, max_length=100)
     ambassador_code: Optional[str] = None
-    verification_token: str
+    turnstile_token: str
     members: List[HackXJrMemberSchema] = Field(..., min_length=1, max_length=5)
 
     @model_validator(mode="before")

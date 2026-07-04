@@ -8,9 +8,9 @@ from sqlalchemy.future import select
 
 from database.connection import get_db
 from helpers.email import send_welcome_jr_email
-from helpers.security import decode_verification_token
 from helpers.sheets import append_row_to_sheets, format_hackx_jr_row
 from helpers.telegram import format_telegram_jr_registration, send_telegram_notification
+from helpers.turnstile import verify_turnstile
 from models.hackx_jr import HackXJrMember, HackXJrTeam
 from schemas.registration import HackXJrRegisterSchema
 
@@ -30,24 +30,16 @@ async def register_hackx_jr_team(
 ):
     logger.info(f"HackX Jr registration request received for team: '{body.team_name}'")
 
-    # 1. Decode and verify verification token
-    verified_email = decode_verification_token(body.verification_token)
-    if not verified_email:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired verification session. Please verify your email via OTP again.",
-        )
-
-    # 2. Match verified email with leader email
-    leader_member = next((m for m in body.members if m.is_leader), None)
-    if (
-        not leader_member
-        or leader_member.email.strip().lower() != verified_email.strip().lower()
-    ):
+    # 1. CAPTCHA verification
+    client_ip = request.client.host if request.client else None
+    if not await verify_turnstile(body.turnstile_token, client_ip):
         raise HTTPException(
             status_code=400,
-            detail="The email verified via OTP must belong to the designated team leader.",
+            detail="CAPTCHA verification failed. Please try again.",
         )
+
+    # 2. Identify the designated team leader (schema guarantees exactly one with email)
+    leader_member = next((m for m in body.members if m.is_leader), None)
 
     # 3. Check duplicate Team Name
     team_check = await db.execute(
@@ -108,7 +100,7 @@ async def register_hackx_jr_team(
                 phone=m.phone.strip(),
                 email=m.email.strip().lower() if m.email else None,
                 is_leader=m.is_leader,
-                email_verified=m.is_leader,  # verified only if they are the verified leader
+                email_verified=False,  # OTP verification removed from Jr flow
             )
             db.add(db_member)
             inserted_members.append(db_member)
@@ -147,7 +139,7 @@ async def register_hackx_jr_team(
     else:
         background_tasks.add_task(
             send_welcome_jr_email,
-            verified_email,
+            leader_member.email.strip().lower(),
             new_team.name,
             new_team.school_name,
             new_team.school_district,

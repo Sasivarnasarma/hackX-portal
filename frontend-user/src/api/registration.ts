@@ -79,7 +79,7 @@ export interface HackXJrRegisterPayload {
   expectations: string;
   source: string;
   ambassador_code?: string;
-  verification_token: string;
+  turnstile_token: string;
   members: HackXJrMember[];
 }
 
