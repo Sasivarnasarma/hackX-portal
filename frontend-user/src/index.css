@@ -91,6 +91,7 @@
 
 /* ── Design Tokens ─────────────────────────────────────────── */
 :root {
+  color-scheme: dark;
   /* Brand Palette */
   --color-void: #010814;
   --color-deep-space: #041A3A;
@@ -508,8 +509,15 @@ body::before {
 }
 
 /* Date input fix for dark theme */
+.form-input[type="date"] {
+  color-scheme: dark;
+}
 .form-input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.7) sepia(0.5) hue-rotate(180deg);
+}
+.form-input[type="date"]::-webkit-date-and-time-value {
+  color: #ffffff;
+  min-height: 1.2em;
 }
 
 .form-error {
@@ -1459,5 +1467,6 @@ input[type="checkbox"]:focus-visible {
 
   .form-input[type="date"]::-webkit-date-and-time-value {
     text-align: center;
+    color: #ffffff;
   }
 }

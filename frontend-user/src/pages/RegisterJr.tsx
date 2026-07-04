@@ -671,17 +671,34 @@ const RegisterJr: React.FC = () => {
                     {validationErrors.phone && <span className="form-error">{validationErrors.phone}</span>}
                   </div>
                     <div className="form-group">
-                    <label className="form-label" htmlFor="leaderDob">Date of Birth</label>
-                    <input
-                      className="form-input"
-                      type="date"
-                      id="leaderDob"
-                      value={leaderDob}
-                      onChange={(e) => setLeaderDob(e.target.value)}
-                      onBlur={() => handleBlur('dob', leaderDob)}
-                    />
-                    {validationErrors.dob && <span className="form-error">{validationErrors.dob}</span>}
-                  </div>
+                      <label className="form-label" htmlFor="leaderDob">Date of Birth</label>
+                      <div style={{ position: 'relative', width: '100%' }}>
+                        <input
+                          className="form-input"
+                          style={{ width: '100%' }}
+                          type="date"
+                          id="leaderDob"
+                          value={leaderDob}
+                          onChange={(e) => setLeaderDob(e.target.value)}
+                          onBlur={() => handleBlur('dob', leaderDob)}
+                        />
+                        {!leaderDob && (
+                          <div style={{
+                            position: 'absolute',
+                            left: '1rem',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'rgba(255, 255, 255, 0.4)',
+                            pointerEvents: 'none',
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '0.95rem',
+                          }}>
+                            Select Date of Birth
+                          </div>
+                        )}
+                      </div>
+                      {validationErrors.dob && <span className="form-error">{validationErrors.dob}</span>}
+                    </div>
                   </motion.div>
 
                   {/* Captcha */}
@@ -940,15 +957,31 @@ const RegisterJr: React.FC = () => {
                           </div>
 
                           <div className="form-group" style={{ marginBottom: '0.75rem' }}>
-                            <input
-                              id={`member-${i}-dob`}
-                              className="form-input"
-                              placeholder="Date of Birth"
-                              type="date"
-                              value={member.dob}
-                              onChange={(e) => updateMemberField(i, 'dob', e.target.value)}
-                              onBlur={() => handleBlur(`member-${i}-dob`, member.dob)}
-                            />
+                            <div style={{ position: 'relative', width: '100%' }}>
+                              <input
+                                id={`member-${i}-dob`}
+                                className="form-input"
+                                style={{ width: '100%' }}
+                                type="date"
+                                value={member.dob}
+                                onChange={(e) => updateMemberField(i, 'dob', e.target.value)}
+                                onBlur={() => handleBlur(`member-${i}-dob`, member.dob)}
+                              />
+                              {!member.dob && (
+                                <div style={{
+                                  position: 'absolute',
+                                  left: '1rem',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  color: 'rgba(255, 255, 255, 0.4)',
+                                  pointerEvents: 'none',
+                                  fontFamily: 'var(--font-body)',
+                                  fontSize: '0.95rem',
+                                }}>
+                                  Date of Birth
+                                </div>
+                              )}
+                            </div>
                             {validationErrors[`member-${i}-dob`] && <span className="form-error">{validationErrors[`member-${i}-dob`]}</span>}
                           </div>
                         </motion.div>
