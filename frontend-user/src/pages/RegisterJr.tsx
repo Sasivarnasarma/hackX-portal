@@ -674,13 +674,18 @@ const RegisterJr: React.FC = () => {
                       <label className="form-label" htmlFor="leaderDob">Date of Birth</label>
                       <div style={{ position: 'relative', width: '100%' }}>
                         <input
-                          className="form-input"
-                          style={{ width: '100%' }}
+                          className={`form-input ${!leaderDob ? 'empty-date-input' : ''}`}
+                          style={{ width: '100%', cursor: 'pointer' }}
                           type="date"
                           id="leaderDob"
                           value={leaderDob}
                           onChange={(e) => setLeaderDob(e.target.value)}
                           onBlur={() => handleBlur('dob', leaderDob)}
+                          onClick={(e) => {
+                            try {
+                              (e.target as HTMLInputElement).showPicker();
+                            } catch {}
+                          }}
                         />
                         {!leaderDob && (
                           <div style={{
@@ -960,12 +965,17 @@ const RegisterJr: React.FC = () => {
                             <div style={{ position: 'relative', width: '100%' }}>
                               <input
                                 id={`member-${i}-dob`}
-                                className="form-input"
-                                style={{ width: '100%' }}
+                                className={`form-input ${!member.dob ? 'empty-date-input' : ''}`}
+                                style={{ width: '100%', cursor: 'pointer' }}
                                 type="date"
                                 value={member.dob}
                                 onChange={(e) => updateMemberField(i, 'dob', e.target.value)}
                                 onBlur={() => handleBlur(`member-${i}-dob`, member.dob)}
+                                onClick={(e) => {
+                                  try {
+                                    (e.target as HTMLInputElement).showPicker();
+                                  } catch {}
+                                }}
                               />
                               {!member.dob && (
                                 <div style={{

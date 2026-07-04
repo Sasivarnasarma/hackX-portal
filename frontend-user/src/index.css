@@ -520,6 +520,17 @@ body::before {
   min-height: 1.2em;
 }
 
+/* Hide native desktop placeholder text when date input is empty */
+.form-input[type="date"].empty-date-input {
+  color: transparent !important;
+}
+.form-input[type="date"].empty-date-input::-webkit-datetime-edit-text,
+.form-input[type="date"].empty-date-input::-webkit-datetime-edit-month-field,
+.form-input[type="date"].empty-date-input::-webkit-datetime-edit-day-field,
+.form-input[type="date"].empty-date-input::-webkit-datetime-edit-year-field {
+  color: transparent !important;
+}
+
 .form-error {
   font-size: 0.75rem;
   color: #ff6b7a;
