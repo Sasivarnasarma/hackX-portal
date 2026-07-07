@@ -83,6 +83,7 @@ const RegisterX: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
 
   // Form Fields Stage 1
   const [leaderName, setLeaderName] = useState(xData.name);
@@ -128,11 +129,20 @@ const RegisterX: React.FC = () => {
 
   useEffect(() => {
     updateXData({ stage: currentStage });
-    // Scroll to top when stage changes
-    setTimeout(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-    }, 50);
-  }, [currentStage, updateXData]);
+    // Scroll to top when stage changes, unless pre-filled (then scroll to bottom)
+    if (!isAlreadyRegistered) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      }, 50);
+    } else if (currentStage === 3) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.documentElement.scrollHeight || document.body.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 400);
+    }
+  }, [currentStage, updateXData, isAlreadyRegistered]);
 
   useEffect(() => {
     if (isSubmitted) return;
@@ -325,6 +335,37 @@ const RegisterX: React.FC = () => {
         verificationToken: res.verification_token,
         captchaSessionToken: '',
       });
+
+      // If already registered, fetch registration details and pre-fill form
+      if (res.already_registered) {
+        setIsAlreadyRegistered(true);
+        try {
+          const details = await registrationAPI.getRegistrationDetails('x', res.verification_token);
+          setTeamName(details.team_name);
+          setUniversity(details.university);
+          setExpectations(details.expectations);
+          
+          const detailsSource = details.source;
+          const optMatch = X_SOURCE_OPTIONS.some(opt => opt.value === detailsSource && opt.value !== 'Other');
+          if (optMatch) {
+            setSource(detailsSource);
+            setOtherSource('');
+          } else if (detailsSource) {
+            setSource('Other');
+            setOtherSource(detailsSource);
+          } else {
+            setSource('');
+            setOtherSource('');
+          }
+          
+          setConsentShare(details.consent_share);
+          const fetchedMembers = details.members || [];
+          const fetchedAdditional = fetchedMembers.filter((m: any) => !m.is_leader);
+          setAdditionalMembers(fetchedAdditional);
+        } catch (fetchErr) {
+          console.error("Failed to fetch existing registration details:", fetchErr);
+        }
+      }
 
       setCurrentStage(3);
     } catch (err: unknown) {
@@ -737,7 +778,10 @@ const RegisterX: React.FC = () => {
                       id="leaderEmail"
                       placeholder="e.g. leader@university.com"
                       value={leaderEmail}
-                      onChange={(e) => setLeaderEmail(e.target.value)}
+                      onChange={(e) => {
+                        setLeaderEmail(e.target.value);
+                        setIsAlreadyRegistered(false);
+                      }}
                       onBlur={() => handleBlur('email', leaderEmail)}
                     />
                     {validationErrors.email && <span className="form-error">{validationErrors.email}</span>}
@@ -1114,6 +1158,32 @@ const RegisterX: React.FC = () => {
                       I agree to share the submitted details with potential sponsors and organizers.
                     </label>
                   </div>
+
+                  {isAlreadyRegistered && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      style={{
+                        padding: '1rem',
+                        background: 'rgba(245, 158, 11, 0.1)',
+                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                        borderRadius: 'var(--radius-md)',
+                        color: '#f59e0b',
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '0.75rem',
+                        marginTop: '1.5rem',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
+                      <div>
+                        <strong style={{ display: 'block', marginBottom: '0.25rem', fontFamily: 'var(--font-heading)' }}>Warning: Existing Registration Found</strong>
+                        You have already registered a team for hackX 11.0 under this leader email. Submitting this form will completely <b>overwrite</b> your existing team and member registration data.
+                      </div>
+                    </motion.div>
+                  )}
 
                   <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1.5rem' }} disabled={isLoading}>
                     {isLoading ? <span className="spinner" /> : <>Complete Registration <Check size={18} /></>}

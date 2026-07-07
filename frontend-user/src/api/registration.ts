@@ -20,6 +20,7 @@ export interface SendOTPResponse {
   message: string;
   email: string;
   captcha_session_token: string;
+  already_registered?: boolean;
 }
 
 export interface ResendOTPPayload {
@@ -39,6 +40,7 @@ export interface VerifyOTPResponse {
   status: string;
   message: string;
   verification_token: string;
+  already_registered?: boolean;
 }
 
 export interface HackXMember {
@@ -93,6 +95,7 @@ export interface VerifyCaptchaResponse {
   status: string;
   message: string;
   verification_token: string;
+  already_registered?: boolean;
 }
 
 export const registrationAPI = {
@@ -113,6 +116,13 @@ export const registrationAPI = {
 
   verifyCaptcha: async (payload: VerifyCaptchaPayload): Promise<VerifyCaptchaResponse> => {
     const response = await api.post<VerifyCaptchaResponse>('/otp/verify-captcha', payload);
+    return response.data;
+  },
+
+  getRegistrationDetails: async (tier: 'x' | 'jr', token: string): Promise<any> => {
+    const response = await api.get(`/${tier}/registration-details`, {
+      params: { token }
+    });
     return response.data;
   },
 

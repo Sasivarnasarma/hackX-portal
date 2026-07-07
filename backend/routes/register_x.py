@@ -9,7 +9,7 @@ from sqlalchemy.future import select
 from database.connection import get_db
 from helpers.email import send_welcome_x_email
 from helpers.security import decode_verification_token
-from helpers.sheets import append_row_to_sheets, format_hackx_row
+from helpers.sheets import update_or_append_row_to_sheets, format_hackx_row
 from helpers.telegram import format_telegram_x_registration, send_telegram_notification
 from models.hackx import HackXMember, HackXTeam
 from schemas.registration import HackXRegisterSchema
@@ -18,6 +18,66 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/x", tags=["hackx_university"])
 limiter = Limiter(key_func=get_remote_address)
+
+
+@router.get("/registration-details")
+async def get_registration_details(
+    token: str,
+    db: AsyncSession = Depends(get_db)
+):
+    verified_email = decode_verification_token(token)
+    if not verified_email:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired verification session.",
+        )
+    
+    result = await db.execute(
+        select(HackXMember).where(
+            HackXMember.email == verified_email.strip().lower(),
+            HackXMember.is_leader == True
+        )
+    )
+    leader = result.scalars().first()
+    if not leader:
+        raise HTTPException(
+            status_code=404,
+            detail="No registration found for this email address.",
+        )
+    
+    team_result = await db.execute(
+        select(HackXTeam).where(HackXTeam.id == leader.team_id)
+    )
+    team = team_result.scalars().first()
+    if not team:
+        raise HTTPException(
+            status_code=404,
+            detail="Registration team not found.",
+        )
+    
+    members_result = await db.execute(
+        select(HackXMember).where(HackXMember.team_id == team.id)
+    )
+    members = members_result.scalars().all()
+    
+    return {
+        "team_name": team.name,
+        "university": team.university,
+        "consent_share": team.consent_share,
+        "expectations": team.expectations or "",
+        "source": team.source or "",
+        "ambassador_code": team.ambassador_code or "",
+        "members": [
+            {
+                "name": m.name,
+                "nic": m.nic,
+                "phone": m.phone,
+                "email": m.email,
+                "is_leader": m.is_leader,
+            }
+            for m in members
+        ]
+    }
 
 
 @router.post("/register")
@@ -49,39 +109,67 @@ async def register_hackx_team(
             detail="The email verified via OTP must belong to the designated team leader.",
         )
 
-    # 3. Check duplicate Team Name
+    leader_email = leader_member.email.strip().lower()
+
+    # Check if leader email is already registered (to overwrite)
+    leader_check = await db.execute(
+        select(HackXMember).where(
+            HackXMember.email == leader_email,
+            HackXMember.is_leader == True
+        )
+    )
+    existing_leader_member = leader_check.scalars().first()
+    existing_team_id = existing_leader_member.team_id if existing_leader_member else None
+
+    # 3. Check duplicate Team Name (excluding the team we are overwriting)
     team_check = await db.execute(
         select(HackXTeam).where(HackXTeam.name == body.team_name.strip())
     )
-    if team_check.scalars().first():
+    existing_team_by_name = team_check.scalars().first()
+    if existing_team_by_name and (
+        not existing_team_id or existing_team_by_name.id != existing_team_id
+    ):
         raise HTTPException(
             status_code=400,
             detail=f"Team name '{body.team_name}' is already taken. Please choose a different team name.",
         )
 
-    # 4. Check duplicate email/NIC registrations
+    # 4. Check duplicate email/NIC registrations (excluding the team we are overwriting)
     emails = [m.email.strip().lower() for m in body.members]
     nics = [m.nic.strip().upper() for m in body.members]
 
     email_check = await db.execute(
-        select(HackXMember.email).where(HackXMember.email.in_(emails))
+        select(HackXMember).where(
+            HackXMember.email.in_(emails),
+            HackXMember.team_id != existing_team_id if existing_team_id else True
+        )
     )
-    dup_email = email_check.scalars().first()
-    if dup_email:
+    dup_member_email = email_check.scalars().first()
+    if dup_member_email:
         raise HTTPException(
             status_code=400,
-            detail=f"The email address '{dup_email}' is already registered in another team.",
+            detail=f"The email address '{dup_member_email.email}' is already registered in another team.",
         )
 
     nic_check = await db.execute(
-        select(HackXMember.nic).where(HackXMember.nic.in_(nics))
+        select(HackXMember).where(
+            HackXMember.nic.in_(nics),
+            HackXMember.team_id != existing_team_id if existing_team_id else True
+        )
     )
-    dup_nic = nic_check.scalars().first()
-    if dup_nic:
+    dup_member_nic = nic_check.scalars().first()
+    if dup_member_nic:
         raise HTTPException(
             status_code=400,
-            detail=f"The NIC number '{dup_nic}' is already registered in another team.",
+            detail=f"The NIC number '{dup_member_nic.nic}' is already registered in another team.",
         )
+
+    # If overwriting, delete the existing team first
+    if existing_team_id:
+        existing_team = await db.get(HackXTeam, existing_team_id)
+        if existing_team:
+            await db.delete(existing_team)
+            await db.flush()
 
     # 5. DB transaction writes
     try:
@@ -153,7 +241,13 @@ async def register_hackx_team(
     background_tasks.add_task(send_telegram_notification, telegram_msg)
 
     sheets_row = format_hackx_row(new_team, inserted_members)
-    background_tasks.add_task(append_row_to_sheets, "hackX", sheets_row)
+    background_tasks.add_task(
+        update_or_append_row_to_sheets,
+        "hackX",
+        sheets_row,
+        verified_email,
+        11
+    )
 
     return {
         "status": "success",

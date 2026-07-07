@@ -9,7 +9,7 @@ from sqlalchemy.future import select
 from database.connection import get_db
 from helpers.email import send_welcome_jr_email
 from helpers.security import decode_verification_token
-from helpers.sheets import append_row_to_sheets, format_hackx_jr_row
+from helpers.sheets import update_or_append_row_to_sheets, format_hackx_jr_row
 from helpers.telegram import format_telegram_jr_registration, send_telegram_notification
 from models.hackx_jr import HackXJrMember, HackXJrTeam
 from schemas.registration import HackXJrRegisterSchema
@@ -18,6 +18,70 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/jr", tags=["hackx_jr"])
 limiter = Limiter(key_func=get_remote_address)
+
+
+@router.get("/registration-details")
+async def get_registration_details(
+    token: str,
+    db: AsyncSession = Depends(get_db)
+):
+    verified_email = decode_verification_token(token)
+    if not verified_email:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired verification session.",
+        )
+    
+    result = await db.execute(
+        select(HackXJrMember).where(
+            HackXJrMember.email == verified_email.strip().lower(),
+            HackXJrMember.is_leader == True
+        )
+    )
+    leader = result.scalars().first()
+    if not leader:
+        raise HTTPException(
+            status_code=404,
+            detail="No registration found for this email address.",
+        )
+    
+    team_result = await db.execute(
+        select(HackXJrTeam).where(HackXJrTeam.id == leader.team_id)
+    )
+    team = team_result.scalars().first()
+    if not team:
+        raise HTTPException(
+            status_code=404,
+            detail="Registration team not found.",
+        )
+    
+    members_result = await db.execute(
+        select(HackXJrMember).where(HackXJrMember.team_id == team.id)
+    )
+    members = members_result.scalars().all()
+    
+    return {
+        "team_name": team.name,
+        "school_name": team.school_name,
+        "school_district": team.school_district,
+        "teacher_name": team.teacher_name or "",
+        "teacher_phone": team.teacher_phone or "",
+        "teacher_email": team.teacher_email or "",
+        "consent_share": team.consent_share,
+        "expectations": team.expectations or "",
+        "source": team.source or "",
+        "ambassador_code": team.ambassador_code or "",
+        "members": [
+            {
+                "name": m.name,
+                "dob": m.dob.strftime("%Y-%m-%d") if m.dob else "",
+                "phone": m.phone,
+                "email": m.email or "",
+                "is_leader": m.is_leader,
+            }
+            for m in members
+        ]
+    }
 
 
 @router.post("/register")
@@ -50,28 +114,51 @@ async def register_hackx_jr_team(
         )
     leader_email = leader_member.email.strip().lower()
 
-    # 3. Check duplicate Team Name
+    # Check if leader email is already registered (to overwrite)
+    leader_check = await db.execute(
+        select(HackXJrMember).where(
+            HackXJrMember.email == leader_email,
+            HackXJrMember.is_leader == True
+        )
+    )
+    existing_leader_member = leader_check.scalars().first()
+    existing_team_id = existing_leader_member.team_id if existing_leader_member else None
+
+    # 3. Check duplicate Team Name (excluding the team we are overwriting)
     team_check = await db.execute(
         select(HackXJrTeam).where(HackXJrTeam.name == body.team_name.strip())
     )
-    if team_check.scalars().first():
+    existing_team_by_name = team_check.scalars().first()
+    if existing_team_by_name and (
+        not existing_team_id or existing_team_by_name.id != existing_team_id
+    ):
         raise HTTPException(
             status_code=400,
             detail=f"Team name '{body.team_name}' is already taken. Please choose a different team name.",
         )
 
-    # 4. Check duplicate email registrations
+    # 4. Check duplicate email registrations (excluding the team we are overwriting)
     emails = [m.email.strip().lower() for m in body.members if m.email]
 
     email_check = await db.execute(
-        select(HackXJrMember.email).where(HackXJrMember.email.in_(emails))
+        select(HackXJrMember).where(
+            HackXJrMember.email.in_(emails),
+            HackXJrMember.team_id != existing_team_id if existing_team_id else True
+        )
     )
-    dup_email = email_check.scalars().first()
-    if dup_email:
+    dup_member = email_check.scalars().first()
+    if dup_member:
         raise HTTPException(
             status_code=400,
-            detail=f"The email address '{dup_email}' is already registered in another junior team.",
+            detail=f"The email address '{dup_member.email}' is already registered in another junior team.",
         )
+
+    # If overwriting, delete the existing team first
+    if existing_team_id:
+        existing_team = await db.get(HackXJrTeam, existing_team_id)
+        if existing_team:
+            await db.delete(existing_team)
+            await db.flush()
 
     # 5. DB transaction writes
     try:
@@ -162,7 +249,13 @@ async def register_hackx_jr_team(
     background_tasks.add_task(send_telegram_notification, telegram_msg)
 
     sheets_row = format_hackx_jr_row(new_team, inserted_members)
-    background_tasks.add_task(append_row_to_sheets, "hackXJr", sheets_row)
+    background_tasks.add_task(
+        update_or_append_row_to_sheets,
+        "hackXJr",
+        sheets_row,
+        leader_email,
+        15
+    )
 
     return {
         "status": "success",

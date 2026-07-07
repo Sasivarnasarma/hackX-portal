@@ -46,26 +46,33 @@ async def send_otp(
         raise HTTPException(status_code=400, detail="Invalid OTP purpose.")
 
     # 3. Check duplicate registrations
+    already_registered = False
     if body.purpose == "hackx_registration":
         result = await db.execute(
             select(HackXMember).where(HackXMember.email == body.email)
         )
         existing = result.scalars().first()
         if existing:
-            raise HTTPException(
-                status_code=400,
-                detail="This email address is already registered in a hackX 11.0 team.",
-            )
+            if existing.is_leader:
+                already_registered = True
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="This email address is already registered as a member of another team.",
+                )
     elif body.purpose == "hackx_jr_registration":
         result = await db.execute(
             select(HackXJrMember).where(HackXJrMember.email == body.email)
         )
         existing = result.scalars().first()
         if existing:
-            raise HTTPException(
-                status_code=400,
-                detail="This email address is already registered in a hackX Jr. 9.0 team.",
-            )
+            if existing.is_leader:
+                already_registered = True
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="This email address is already registered as a member of another junior team.",
+                )
 
     # 4. Generate/Throttling logic
     last_info = get_last_otp_info(body.email)
@@ -104,6 +111,7 @@ async def send_otp(
         "message": "OTP successfully sent to email.",
         "email": body.email,
         "captcha_session_token": captcha_token,
+        "already_registered": already_registered,
     }
 
 
@@ -127,18 +135,33 @@ async def resend_otp(
         raise HTTPException(status_code=400, detail="Invalid OTP purpose.")
 
     # 3. Check duplicate registrations
+    already_registered = False
     if body.purpose == "hackx_registration":
         result = await db.execute(
             select(HackXMember).where(HackXMember.email == body.email)
         )
-        if result.scalars().first():
-            raise HTTPException(status_code=400, detail="Email is already registered.")
+        existing = result.scalars().first()
+        if existing:
+            if existing.is_leader:
+                already_registered = True
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="This email address is already registered as a member of another team.",
+                )
     elif body.purpose == "hackx_jr_registration":
         result = await db.execute(
             select(HackXJrMember).where(HackXJrMember.email == body.email)
         )
-        if result.scalars().first():
-            raise HTTPException(status_code=400, detail="Email is already registered.")
+        existing = result.scalars().first()
+        if existing:
+            if existing.is_leader:
+                already_registered = True
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="This email address is already registered as a member of another junior team.",
+                )
 
     # 4. Generates/Throttle logic
     last_info = get_last_otp_info(body.email)
@@ -182,6 +205,7 @@ async def resend_otp(
         "status": "success",
         "message": "OTP successfully resent to email.",
         "email": body.email,
+        "already_registered": already_registered,
     }
 
 
@@ -223,10 +247,31 @@ async def verify_otp(
     clear_otp(body.email)
     token = create_verification_token(body.email)
 
+    already_registered = False
+    if body.purpose == "hackx_registration":
+        result = await db.execute(
+            select(HackXMember).where(
+                HackXMember.email == body.email,
+                HackXMember.is_leader == True
+            )
+        )
+        if result.scalars().first():
+            already_registered = True
+    elif body.purpose == "hackx_jr_registration":
+        result = await db.execute(
+            select(HackXJrMember).where(
+                HackXJrMember.email == body.email,
+                HackXJrMember.is_leader == True
+            )
+        )
+        if result.scalars().first():
+            already_registered = True
+
     return {
         "status": "success",
         "message": "OTP verified successfully.",
         "verification_token": token,
+        "already_registered": already_registered,
     }
 
 
@@ -250,24 +295,33 @@ async def verify_captcha_only(
         raise HTTPException(status_code=400, detail="Invalid verification purpose.")
 
     # 3. Duplicate checks
+    already_registered = False
     if body.purpose == "hackx_registration":
         result = await db.execute(
             select(HackXMember).where(HackXMember.email == body.email)
         )
-        if result.scalars().first():
-            raise HTTPException(
-                status_code=400,
-                detail="This email address is already registered in a hackX 11.0 team.",
-            )
+        existing = result.scalars().first()
+        if existing:
+            if existing.is_leader:
+                already_registered = True
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="This email address is already registered as a member of another team.",
+                )
     elif body.purpose == "hackx_jr_registration":
         result = await db.execute(
             select(HackXJrMember).where(HackXJrMember.email == body.email)
         )
-        if result.scalars().first():
-            raise HTTPException(
-                status_code=400,
-                detail="This email address is already registered in a hackX Jr. 9.0 team.",
-            )
+        existing = result.scalars().first()
+        if existing:
+            if existing.is_leader:
+                already_registered = True
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="This email address is already registered as a member of another junior team.",
+                )
 
     # 4. Generate token
     token = create_verification_token(body.email)
@@ -275,4 +329,5 @@ async def verify_captcha_only(
         "status": "success",
         "message": "CAPTCHA verified successfully. Session verification token issued.",
         "verification_token": token,
+        "already_registered": already_registered,
     }
