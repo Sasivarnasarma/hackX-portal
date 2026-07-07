@@ -51,7 +51,8 @@ const UNIVERSITIES_LIST = [
   "SLT Mobitel Nebula Institute of Technology",
   "KIU University",
   "Sri Lanka Technological Campus (SLTC)",
-  "Institution of Chartered Accountants of Sri Lanka"
+  "Institution of Chartered Accountants of Sri Lanka",
+  "ESOFT Metro Campus"
 ];
 
 const RegisterX: React.FC = () => {
