@@ -119,9 +119,9 @@ export const registrationAPI = {
     return response.data;
   },
 
-  getRegistrationDetails: async (tier: 'x' | 'jr', token: string): Promise<any> => {
+  getRegistrationDetails: async (tier: 'x' | 'jr', token: string, phone?: string): Promise<any> => {
     const response = await api.get(`/${tier}/registration-details`, {
-      params: { token }
+      params: { token, phone }
     });
     return response.data;
   },

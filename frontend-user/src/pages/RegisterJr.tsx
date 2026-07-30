@@ -258,9 +258,9 @@ const RegisterJr: React.FC = () => {
 
         // If already registered, fetch registration details and pre-fill form
         if (res.already_registered) {
-          setIsAlreadyRegistered(true);
           try {
-            const details = await registrationAPI.getRegistrationDetails('jr', res.verification_token);
+            const details = await registrationAPI.getRegistrationDetails('jr', res.verification_token, leaderPhone.trim());
+            setIsAlreadyRegistered(true);
             setTeamName(details.team_name);
             setSchoolName(details.school_name);
             setSchoolDistrict(details.school_district);
@@ -287,7 +287,8 @@ const RegisterJr: React.FC = () => {
             const fetchedAdditional = fetchedMembers.filter((m: any) => !m.is_leader);
             setAdditionalMembers(fetchedAdditional);
           } catch (fetchErr) {
-            console.error("Failed to fetch existing junior registration details:", fetchErr);
+            console.error("Failed to fetch existing junior registration details (treating as new registration):", fetchErr);
+            setIsAlreadyRegistered(false);
           }
         }
 

@@ -23,6 +23,7 @@ limiter = Limiter(key_func=get_remote_address)
 @router.get("/registration-details")
 async def get_registration_details(
     token: str,
+    phone: str,
     db: AsyncSession = Depends(get_db)
 ):
     verified_email = decode_verification_token(token)
@@ -34,15 +35,15 @@ async def get_registration_details(
     
     result = await db.execute(
         select(HackXJrMember).where(
-            HackXJrMember.email == verified_email.strip().lower(),
+            HackXJrMember.phone == phone.strip(),
             HackXJrMember.is_leader == True
         )
     )
     leader = result.scalars().first()
-    if not leader:
+    if not leader or leader.email.strip().lower() != verified_email.strip().lower():
         raise HTTPException(
             status_code=404,
-            detail="No registration found for this email address.",
+            detail="No registration found for this mobile number under your session.",
         )
     
     team_result = await db.execute(
