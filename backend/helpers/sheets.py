@@ -150,6 +150,75 @@ async def update_or_append_row_to_sheets(
         raise e
 
 
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type(Exception),
+    reraise=True,
+)
+async def update_or_append_row_to_sheets_by_name(
+    range_name: str, row_data: list, team_name: str, name_index: int = 1
+) -> bool:
+    """
+    Checks if a row with the same team name already exists at the given column index.
+    If it exists, updates the row. Otherwise, appends a new row.
+    """
+    service = get_google_sheets_service()
+    if not service:
+        return False
+
+    try:
+        sheet = service.spreadsheets()
+
+        # Fetch current values in sheet to find the matching team name row
+        result = await run_in_threadpool(
+            sheet.values().get(
+                spreadsheetId=GOOGLE_SHEET_ID, range=range_name
+            ).execute
+        )
+        values = result.get("values", [])
+
+        found_row_idx = -1
+        for idx, row in enumerate(values):
+            if len(row) > name_index and row[name_index].strip().lower() == team_name.strip().lower():
+                found_row_idx = idx + 1  # Google Sheets row numbers are 1-indexed
+                break
+
+        if found_row_idx != -1:
+            # Overwrite the existing row
+            update_range = f"{range_name}!A{found_row_idx}"
+            body = {"values": [row_data]}
+            request = sheet.values().update(
+                spreadsheetId=GOOGLE_SHEET_ID,
+                range=update_range,
+                valueInputOption="USER_ENTERED",
+                body=body,
+            )
+            await run_in_threadpool(request.execute)
+            logger.info(
+                f"Successfully updated row {found_row_idx} in Google Sheet [{range_name}] for team '{team_name}'"
+            )
+            return True
+        else:
+            # Append new row
+            body = {"values": [row_data]}
+            request = sheet.values().append(
+                spreadsheetId=GOOGLE_SHEET_ID,
+                range=range_name,
+                valueInputOption="USER_ENTERED",
+                insertDataOption="INSERT_ROWS",
+                body=body,
+            )
+            await run_in_threadpool(request.execute)
+            logger.info(
+                f"Successfully appended row to Google Sheet [{range_name}] for team '{team_name}'"
+            )
+            return True
+    except Exception as e:
+        logger.error(f"Error updating/appending by name to Google Sheet [{range_name}]: {e}")
+        raise e
+
+
 def format_hackx_row(team, members) -> list:
     """
     Formats HackX university tier columns:
