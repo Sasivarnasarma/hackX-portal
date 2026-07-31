@@ -25,6 +25,12 @@ const TurnstileCaptcha: React.FC<TurnstileCaptchaProps> = ({ onVerify, theme = '
   const widgetIdRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Keep latest onVerify in a ref so the render useEffect doesn't depend on its reference
+  const onVerifyRef = useRef(onVerify);
+  useEffect(() => {
+    onVerifyRef.current = onVerify;
+  }, [onVerify]);
+
   useEffect(() => {
     const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
     const win = window as unknown as TurnstileWindow;
@@ -35,11 +41,11 @@ const TurnstileCaptcha: React.FC<TurnstileCaptchaProps> = ({ onVerify, theme = '
           widgetIdRef.current = win.turnstile.render(containerRef.current, {
             sitekey: siteKey,
             callback: (token: string) => {
-              onVerify(token);
+              onVerifyRef.current(token);
               setError(null);
             },
             'expired-callback': () => {
-              onVerify(null);
+              onVerifyRef.current(null);
             },
             theme: theme,
           });
@@ -75,7 +81,7 @@ const TurnstileCaptcha: React.FC<TurnstileCaptchaProps> = ({ onVerify, theme = '
         widgetIdRef.current = null;
       }
     };
-  }, [onVerify, theme]);
+  }, [theme]);
 
   return (
     <div className="turnstile-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '1rem 0' }}>

@@ -81,3 +81,6 @@ docker-compose.override.yml
 
 credentials.json
 token.json
+
+# Submissions
+backend/submissions/

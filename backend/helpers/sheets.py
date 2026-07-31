@@ -281,3 +281,65 @@ def format_hackx_jr_row(team, members) -> list:
         else:
             row.extend(["", "", "", ""])
     return row
+
+
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type(Exception),
+    reraise=True,
+)
+async def update_team_proposal_links(
+    sheet_name: str, team_id: int, youtube_url: str, drive_url: str
+) -> bool:
+    """
+    Finds the row matching team_id in column A, and updates:
+    - Column AC (index 28) and AD (index 29) for hackX
+    - Column AG (index 32) and AH (index 33) for hackXJr
+    """
+    service = get_google_sheets_service()
+    if not service:
+        return False
+
+    try:
+        sheet = service.spreadsheets()
+        # Read the first column to match team ID
+        range_name = f"{sheet_name}!A:A"
+        result = await run_in_threadpool(
+            sheet.values().get(spreadsheetId=GOOGLE_SHEET_ID, range=range_name).execute
+        )
+        rows = result.get("values", [])
+        row_index = -1
+
+        for i, row in enumerate(rows):
+            if row and str(row[0]).strip() == str(team_id).strip():
+                row_index = i + 1  # 1-indexed
+                break
+
+        if row_index == -1:
+            logger.error(f"Could not find Team ID {team_id} in sheet [{sheet_name}] to update proposal links.")
+            return False
+
+        if sheet_name == "hackX":
+            # Column AC is 29th (AC), Column AD is 30th (AD)
+            update_range = f"{sheet_name}!AC{row_index}:AD{row_index}"
+        else:
+            # Column AG is 33rd (AG), Column AH is 34th (AH)
+            update_range = f"{sheet_name}!AG{row_index}:AH{row_index}"
+
+        body = {"values": [[youtube_url, drive_url]]}
+        request = sheet.values().update(
+            spreadsheetId=GOOGLE_SHEET_ID,
+            range=update_range,
+            valueInputOption="USER_ENTERED",
+            body=body,
+        )
+        await run_in_threadpool(request.execute)
+        logger.info(
+            f"Successfully updated proposal links for Team {team_id} in [{sheet_name}] on row {row_index}."
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Error updating proposal links in Google Sheet [{sheet_name}]: {e}")
+        raise e
+

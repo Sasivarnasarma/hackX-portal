@@ -32,6 +32,8 @@ class HackXJrTeam(Base):
     expectations = Column(Text, nullable=True)
     source = Column(String, nullable=True)
     ambassador_code = Column(String, nullable=True)
+    proposal_link = Column(String, nullable=True)
+    youtube_link = Column(String, nullable=True)
     created_at = Column(DateTime, default=utc_now, nullable=False)
 
     members = relationship(

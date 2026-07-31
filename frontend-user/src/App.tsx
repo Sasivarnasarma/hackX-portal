@@ -6,6 +6,8 @@ const Home = lazy(() => import('./pages/Home'));
 const RegisterX = lazy(() => import('./pages/RegisterX'));
 const RegisterJr = lazy(() => import('./pages/RegisterJr'));
 const Success = lazy(() => import('./pages/Success'));
+const Proposal = lazy(() => import('./pages/Proposal'));
+const ProposalSuccess = lazy(() => import('./pages/ProposalSuccess'));
 
 const PageLoader = () => (
   <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -23,9 +25,24 @@ const App: React.FC = () => {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/x" element={<RegisterX />} />
-            <Route path="/jr" element={<RegisterJr />} />
-            <Route path="/success" element={<Success />} />
+            
+            {/* HackX (University) Routes */}
+            <Route path="/x/registration" element={<RegisterX />} />
+            <Route path="/x/registration-success" element={<Success />} />
+            <Route path="/x/proposal" element={<Proposal tier="x" />} />
+            <Route path="/x/proposal-success" element={<ProposalSuccess tier="x" />} />
+            
+            {/* HackX Jr (School) Routes */}
+            <Route path="/jr/registration" element={<RegisterJr />} />
+            <Route path="/jr/registration-success" element={<Success />} />
+            <Route path="/jr/proposal" element={<Proposal tier="jr" />} />
+            <Route path="/jr/proposal-success" element={<ProposalSuccess tier="jr" />} />
+
+            {/* Legacy Fallbacks */}
+            <Route path="/x" element={<Navigate to="/x/registration" replace />} />
+            <Route path="/jr" element={<Navigate to="/jr/registration" replace />} />
+            <Route path="/success" element={<Navigate to="/" replace />} />
+            
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

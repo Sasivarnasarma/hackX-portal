@@ -46,6 +46,7 @@ const JR_SOURCE_OPTIONS = [
   { value: 'Friends', label: 'Friends' },
   { value: 'School/Teacher', label: 'School/Teacher' },
   { value: 'Previous Participant', label: 'Previous Participant' },
+  { value: 'Awareness Session', label: 'Awareness Session' },
   { value: 'Other', label: 'Other' }
 ];
 
@@ -564,7 +565,7 @@ const RegisterJr: React.FC = () => {
       sessionStorage.removeItem('hackx_ambassador_code');
       clearJrData();
       clearXData();
-      navigate('/success');
+      navigate('/jr/registration-success');
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         setError('Your email verification session has expired. Please verify your email again.');

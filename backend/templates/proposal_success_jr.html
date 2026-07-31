@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposal Submitted - hackX Jr. 9.0</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        body, table, td, p, h1, h2, h3, span, div { margin: 0; padding: 0; }
+        body {
+            background-color: #010E13;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        @media screen and (max-width: 620px) {
+            .outer-wrapper { padding: 0 !important; }
+            .email-card { width: 100% !important; max-width: 100% !important; border-radius: 0 !important; }
+            .card-body { padding: 28px 20px !important; }
+            .hero-section { padding: 24px 20px !important; }
+            .footer-pad { padding: 24px 20px !important; }
+            .hero-logo { width: 160px !important; height: auto !important; }
+        }
+    </style>
+</head>
+<body style="margin:0; padding:0; background-color:#010E13;">
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+       style="background-color:#010E13; background-image: radial-gradient(ellipse at 50% 0%, rgba(24,160,192,0.18) 0%, transparent 65%);">
+    <tr>
+        <td align="center" class="outer-wrapper" style="padding: 48px 20px;">
+
+            <!-- Email Card -->
+            <table role="presentation" class="email-card" cellspacing="0" cellpadding="0"
+                   style="width: 580px; max-width: 100%; border-radius: 28px; overflow: hidden; border: 1px solid rgba(10,92,114,0.4); box-shadow: 0 32px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(10,92,114,0.15), inset 0 1px 0 rgba(255,220,100,0.08);">
+
+                <!-- HERO -->
+                <tr>
+                    <td class="hero-section" align="center"
+                        style="padding: 24px 40px 24px; background: linear-gradient(160deg, #052E3F 0%, #010E13 100%); border-bottom: 1px solid rgba(24,160,192,0.2); position:relative;">
+
+                        <!-- Logo Image -->
+                        <img class="hero-logo" src="https://cdn.jsdelivr.net/gh/Sasivarnasarma/hackX-portal/backend/templates/logos/hackXJr-logo.png"
+                             alt="hackX Jr. 9.0"
+                             width="200"
+                             style="display:block; margin:0 auto 14px; max-width:200px; height:auto; filter: drop-shadow(0 0 18px rgba(114,229,248,0.45));">
+                        <span style="display:block; font-size:11px; font-weight:500; letter-spacing:5px; color:#ffffff; text-transform:uppercase; text-shadow:none;">National Hackathon Series 2026</span>
+
+                    </td>
+                </tr>
+
+                <!-- SUBMISSION BANNER -->
+                <tr>
+                    <td style="padding: 0; background: linear-gradient(90deg, rgba(114,229,248,0.08) 0%, rgba(10,92,114,0.15) 50%, rgba(114,229,248,0.08) 100%); border-bottom: 1px solid rgba(24,160,192,0.2);">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                             <tr>
+                                 <td align="center" style="padding: 20px;">
+                                     <span style="font-size:14px; font-weight:600; color:#72E5F8; text-transform:uppercase; letter-spacing:1.5px;">Proposal Upload Confirmed</span>
+                                 </td>
+                             </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- BODY -->
+                <tr>
+                    <td class="card-body" style="position:relative; padding: 44px; background: linear-gradient(180deg, #052E3F 0%, #010E13 100%);">
+
+                        <h2 style="font-size:22px; font-weight:700; color:#f0f4ff; margin-bottom:12px;">Hello, Team <span style="color:#72E5F8;">{{team_name}}</span>!</h2>
+                        <p style="font-size:14px; line-height:1.75; color:rgba(114,229,248,0.7); margin-bottom:30px;">
+                            This email confirms that your school team has successfully uploaded the project blueprint proposal for <strong style="color:#f0f4ff;">hackX Jr. 9.0</strong>. Our evaluation panel will review the submissions shortly.
+                        </p>
+
+                        <!-- Submission details -->
+                        <div style="margin-bottom:30px; border-radius:18px; overflow:hidden; border: 1px solid rgba(24,160,192,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);">
+                            <!-- Card header -->
+                            <div style="padding:16px 22px; background: rgba(114,229,248,0.07); border-bottom: 1px solid rgba(114,229,248,0.12);">
+                                <span style="font-size:11px; font-weight:700; color:#72E5F8; text-transform:uppercase; letter-spacing:2px;">Submission Summary</span>
+                            </div>
+
+                            <!-- Card body -->
+                            <div style="padding: 22px; background: rgba(1,14,19,0.6); font-size: 14px; line-height: 1.8; color: rgba(114,229,248,0.7);">
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                                    <tr>
+                                        <td style="padding: 6px 0; color: rgba(114,229,248,0.5); font-weight: 500;" width="140">Submitted By:</td>
+                                        <td style="padding: 6px 0; color: #f0f4ff; font-weight: 600;">{{submitter_name}}</td>
+                                    </tr>
+
+                                    <tr>
+                                        <td style="padding: 6px 0; color: rgba(114,229,248,0.5); font-weight: 500;">Timestamp:</td>
+                                        <td style="padding: 6px 0; color: #72E5F8; font-weight: 600;">{{timestamp}}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <p style="font-size:13px; line-height:1.7; color:rgba(114,229,248,0.7); margin-bottom:12px;">
+                            Need to make edits to your submission? You can re-upload your proposal via the portal at any time prior to the deadline. Re-uploading will automatically overwrite your previous file.
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+                <tr>
+                    <td class="footer-pad" align="center" style="padding: 28px 40px; background-color:#010E13; border-top:1px solid rgba(255,255,255,0.05);">
+                        <p style="font-size:11px; color:#0A5C72; line-height:1.6;">
+                            &copy; 2026 hackX Jr. Organizing Committee &nbsp;&middot;&nbsp; All Rights Reserved<br>
+                            Sri Lanka's Premier National Hackathon Series
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

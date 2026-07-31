@@ -26,6 +26,7 @@ from slowapi.errors import RateLimitExceeded  # noqa: E402
 from slowapi.util import get_remote_address  # noqa: E402
 from starlette.exceptions import HTTPException as StarletteHTTPException  # noqa: E402
 
+from sqlalchemy import text  # noqa: E402
 from database.connection import Base, engine  # noqa: E402
 from helpers.exception_handlers import (  # noqa: E402
     global_exception_handler,
@@ -43,6 +44,7 @@ from routes import (  # noqa: E402
     otp_router,
     register_jr_router,
     register_x_router,
+    proposal_router,
 )
 
 
@@ -53,6 +55,8 @@ async def lifespan(app: FastAPI):
         async with engine.begin() as conn:
             # Create all tables dynamically on startup
             await conn.run_sync(Base.metadata.create_all)
+
+
         logger.info("Lifespan: Database schema synchronized.")
     except Exception as e:
         logger.error(f"Lifespan: Database schema synchronization failed: {e}")
@@ -122,6 +126,7 @@ app.add_middleware(
 app.include_router(otp_router)
 app.include_router(register_x_router)
 app.include_router(register_jr_router)
+app.include_router(proposal_router)
 
 
 @app.get("/")

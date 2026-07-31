@@ -11,6 +11,8 @@ services:
       - "5272:8000"
     env_file:
       - ./backend/.env
+    volumes:
+      - ./backend/submissions:/app/submissions
 
   frontend-user:
     build:
