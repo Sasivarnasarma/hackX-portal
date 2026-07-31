@@ -42,6 +42,7 @@ const DISTRICTS_LIST = [
 ];
 
 const JR_SOURCE_OPTIONS = [
+  { value: 'Awareness Session', label: 'Awareness Session' },
   { value: 'Social Media', label: 'Social Media' },
   { value: 'Friends', label: 'Friends' },
   { value: 'School/Teacher', label: 'School/Teacher' },
@@ -816,7 +817,7 @@ const RegisterJr: React.FC = () => {
                   {/* School District Dropdown */}
                   <div className="form-group" ref={districtDropdownRef} id="schoolDistrict">
                     <label className="form-label">School District</label>
-                    <div className="custom-select-wrapper">
+                    <div className={`custom-select-wrapper ${isDistrictDropdownOpen ? 'open' : ''}`}>
                       <div
                         className={`custom-select-trigger ${isDistrictDropdownOpen ? 'open' : ''}`}
                         onClick={() => setIsDistrictDropdownOpen(!isDistrictDropdownOpen)}
@@ -1028,7 +1029,7 @@ const RegisterJr: React.FC = () => {
 
                   <div className="form-group" ref={sourceDropdownRef} id="source">
                     <label className="form-label">How did you hear about hackX Jr? (Optional)</label>
-                    <div className="custom-select-wrapper">
+                    <div className={`custom-select-wrapper ${isSourceDropdownOpen ? 'open' : ''}`}>
                       <div
                         className={`custom-select-trigger ${isSourceDropdownOpen ? 'open' : ''}`}
                         onClick={() => setIsSourceDropdownOpen(!isSourceDropdownOpen)}

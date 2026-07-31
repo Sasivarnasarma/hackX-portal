@@ -259,7 +259,7 @@ const Success: React.FC = () => {
                             <FacebookIcon /> Facebook
                           </a>
                           {isJr && (
-                            <a href="https://chat.whatsapp.com/B5EpWJsyeprHjGLILWXxoj?mode=gi_t" target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: `rgba(${arcRgb}, 0.05)`, border: `1px solid rgba(${arcRgb}, 0.15)`, padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
+                            <a href="https://chat.whatsapp.com/DDfWs4BA12t2Dgtx0NJkef" target="_blank" rel="noopener noreferrer" className="success-social-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-arc)', fontSize: '0.75rem', textDecoration: 'none', background: `rgba(${arcRgb}, 0.05)`, border: `1px solid rgba(${arcRgb}, 0.15)`, padding: '0.25rem 0.6rem', borderRadius: '0.5rem' }}>
                               <WhatsappIcon /> WhatsApp
                             </a>
                           )}
