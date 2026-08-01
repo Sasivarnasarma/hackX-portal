@@ -88,7 +88,11 @@ const ProposalSuccess: React.FC<ProposalSuccessProps> = ({ tier }) => {
               </p>
 
               <p className="text-sm text-slate-400 mb-8 leading-relaxed">
-                Congratulations! The project proposal blueprint and pitch video showcase links for team <strong>{teamName}</strong> have been submitted successfully.
+                {isJr ? (
+                  <>Congratulations! The project proposal blueprint for team <strong>{teamName}</strong> has been submitted successfully.</>
+                ) : (
+                  <>Congratulations! The project proposal blueprint and pitch video showcase links for team <strong>{teamName}</strong> have been submitted successfully.</>
+                )}
               </p>
 
               {/* Roster & Submit Metadata */}
@@ -128,8 +132,8 @@ const ProposalSuccess: React.FC<ProposalSuccessProps> = ({ tier }) => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/" style={{ textDecoration: 'none' }}>
-                  <button className="px-8 py-3 rounded-full border border-slate-700 hover:bg-slate-900 text-slate-300 font-bold uppercase text-xs tracking-wider transition-all flex items-center justify-center gap-2">
-                    <Compass size={14} />
+                  <button className="btn-secondary">
+                    <Compass size={16} />
                     Back to Hub
                   </button>
                 </Link>
