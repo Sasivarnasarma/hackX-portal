@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Check, AlertCircle, FileText, Send, HelpCircle, User } from 'lucide-react';
 import OceanBackground from '../components/OceanBackground';
@@ -76,9 +76,78 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
   const [selectedJrTeam, setSelectedJrTeam] = useState<any>(null);
   const [jrSessionToken, setJrSessionToken] = useState('');
 
+  // Load session from navigation state if coming back from success page
+  const location = useLocation();
+  useEffect(() => {
+    if (location.state) {
+      const navState = location.state as any;
+      if (isJr && navState.jrSessionToken && navState.selectedJrTeam) {
+        setJrSessionToken(navState.jrSessionToken);
+        setSelectedJrTeam(navState.selectedJrTeam);
+        setStage(3);
+      } else if (!isJr && navState.verificationToken && navState.teamDetails) {
+        setVerificationToken(navState.verificationToken);
+        setTeamDetails(navState.teamDetails);
+        setStage(3);
+      }
+    }
+  }, [location.state, isJr]);
+
+  // Custom delete modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; slotNumber: number } | null>(null);
+
+  // Junior Proposals list state and helper actions
+  const [jrProposals, setJrProposals] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (selectedJrTeam) {
+      setJrProposals(selectedJrTeam.proposals || []);
+    } else {
+      setJrProposals([]);
+    }
+  }, [selectedJrTeam]);
+
+  const handleDownloadJrFile = (id: number) => {
+    window.open(`${API_BASE_URL}/proposal/download-jr/${id}?jr_session_token=${encodeURIComponent(jrSessionToken)}`, '_blank');
+  };
+
+  const handleDeleteJrFile = async (id: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await axios.delete(`${API_BASE_URL}/proposal/delete-jr/${id}`, {
+        params: { jr_session_token: jrSessionToken }
+      });
+      const updatedProposals = jrProposals.filter(p => p.id !== id);
+      setJrProposals(updatedProposals);
+      if (selectedJrTeam) {
+        setSelectedJrTeam({
+          ...selectedJrTeam,
+          proposals: updatedProposals
+        });
+      }
+    } catch (err: any) {
+      setError(getErrorMessage(err, 'Failed to delete proposal file.'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getNextJrSlot = () => {
+    const occupied = new Set(jrProposals.map(p => p.slot_number));
+    for (let s = 1; s <= 5; s++) {
+      if (!occupied.has(s)) return s;
+    }
+    return null;
+  };
+
+  const nextSlot = getNextJrSlot();
+
   // Common Submission Inputs
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   // Timer for OTP resend
@@ -276,14 +345,32 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
 
   // Handle File upload changes
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type !== 'application/pdf') {
-        setError('Only PDF file submissions are allowed.');
-        setSelectedFile(null);
-      } else {
+    if (e.target.files) {
+      if (isJr) {
+        const filesArray = Array.from(e.target.files);
+        const nonPdf = filesArray.some(f => !f.name.toLowerCase().endsWith('.pdf'));
+        if (nonPdf) {
+          setError('Only PDF file submissions are allowed.');
+          setSelectedFiles([]);
+          return;
+        }
+        const remaining = 5 - jrProposals.length;
+        if (filesArray.length > remaining) {
+          setError(`You can only upload up to ${remaining} more proposal(s).`);
+          setSelectedFiles([]);
+          return;
+        }
         setError(null);
-        setSelectedFile(file);
+        setSelectedFiles(filesArray);
+      } else {
+        const file = e.target.files[0];
+        if (file.type !== 'application/pdf') {
+          setError('Only PDF file submissions are allowed.');
+          setSelectedFile(null);
+        } else {
+          setError(null);
+          setSelectedFile(file);
+        }
       }
     }
   };
@@ -322,11 +409,15 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
   // Final submission action
   const handleSubmitProposal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) {
+    if (!isJr && !selectedFile) {
       setError('Please select your proposal PDF file.');
       return;
     }
-    if (!youtubeUrl.trim()) {
+    if (isJr && selectedFiles.length === 0) {
+      setError('Please select at least one proposal PDF file.');
+      return;
+    }
+    if (!isJr && !youtubeUrl.trim()) {
       setError('Please provide your project demonstration YouTube video URL.');
       return;
     }
@@ -336,8 +427,14 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
     setUploadProgress(10);
 
     const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('youtube_url', youtubeUrl.trim());
+    if (!isJr && selectedFile) {
+      formData.append('file', selectedFile);
+      formData.append('youtube_url', youtubeUrl.trim());
+    } else {
+      selectedFiles.forEach((file) => {
+        formData.append('files', file);
+      });
+    }
 
     let submissionUrl = '';
     let successState: any = {};
@@ -350,16 +447,33 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
         youtubeUrl: youtubeUrl,
         submitter: teamDetails?.submitter?.name,
         role: teamDetails?.submitter?.is_leader ? 'Leader' : 'Member',
+        verificationToken: verificationToken,
+        teamDetails: teamDetails,
       };
     } else {
       formData.append('jr_session_token', jrSessionToken);
       formData.append('team_id', selectedJrTeam?.team_id);
       submissionUrl = `${API_BASE_URL}/proposal/submit-jr`;
+
+      // Pre-calculate which slots are being occupied by this batch of uploads
+      const occupied = new Set(jrProposals.map((p) => p.slot_number));
+      const occupiedSlots: number[] = [];
+      let currentVacant = 1;
+      for (let i = 0; i < selectedFiles.length; i++) {
+        while (occupied.has(currentVacant) || occupiedSlots.includes(currentVacant)) {
+          currentVacant++;
+        }
+        occupiedSlots.push(currentVacant);
+      }
+
       successState = {
         teamName: selectedJrTeam?.team_name,
-        youtubeUrl: youtubeUrl,
+        youtubeUrl: '',
         submitter: selectedJrTeam?.leader_name,
         role: 'Leader',
+        slotNumbers: occupiedSlots,
+        jrSessionToken: jrSessionToken,
+        selectedJrTeam: selectedJrTeam,
       };
     }
 
@@ -726,8 +840,7 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                             </p>
                           </div>
                         )}
-                        {((!isJr && (teamDetails?.has_submitted || teamDetails?.proposal_link || teamDetails?.youtube_link)) || 
-                          (isJr && (selectedJrTeam?.has_submitted || selectedJrTeam?.proposal_link || selectedJrTeam?.youtube_link))) && (
+                        {!isJr && (teamDetails?.has_submitted || teamDetails?.proposal_link || teamDetails?.youtube_link) && (
                           <div style={{
                             background: 'rgba(255, 193, 7, 0.1)',
                             border: '1px solid #ffc107',
@@ -747,66 +860,198 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                           </div>
                         )}
 
-                        <div className="form-group">
-                          <label className="form-label" htmlFor="youtubeUrl">
-                            YouTube Video Link
-                          </label>
-                          <input
-                            className="form-input"
-                            type="url"
-                            id="youtubeUrl"
-                            value={youtubeUrl}
-                            onChange={e => setYoutubeUrl(e.target.value)}
-                            placeholder="https://www.youtube.com/watch?v=..."
-                            required
-                            disabled={isLoading}
-                          />
-                          <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '0.35rem', display: 'block', textAlign: 'left' }}>
-                            Provide the link to your project demonstration video. Ensure it is set to Public or Unlisted.
-                          </span>
-                        </div>
+                        {isJr && jrProposals.length > 0 && (
+                          <div style={{
+                            background: 'rgba(91, 184, 255, 0.08)',
+                            border: '1px solid var(--color-arc)',
+                            borderRadius: '0.5rem',
+                            padding: '1.25rem 1rem',
+                            marginBottom: '1.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            color: 'var(--color-arc)',
+                            textAlign: 'left'
+                          }}>
+                            <AlertCircle size={20} style={{ flexShrink: 0 }} />
+                            <span style={{ fontSize: '0.85rem', lineHeight: '1.4' }}>
+                              Your team has already submitted <strong>{jrProposals.length} out of 5</strong> proposals. You can upload additional blueprints to fill the vacant slots, or delete existing proposals to free up slots.
+                            </span>
+                          </div>
+                        )}
 
-                        <div className="form-group">
-                          <label className="form-label">
-                            Proposal Document (PDF)
-                          </label>
-                          <div
-                            style={{
-                              position: 'relative',
-                              border: '2px dashed rgba(255, 255, 255, 0.08)',
-                              borderRadius: 'var(--radius-md)',
-                              padding: '2.5rem 1.5rem',
-                              textAlign: 'center',
-                              cursor: 'pointer',
-                              background: 'rgba(0, 0, 0, 0.15)',
-                              transition: 'var(--transition-fast)'
-                            }}
-                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-arc)'; e.currentTarget.style.background = 'rgba(91, 184, 255, 0.02)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'; e.currentTarget.style.background = 'rgba(0, 0, 0, 0.15)'; }}
-                          >
+                        {isJr && (
+                          <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
+                            <h4 style={{
+                              fontFamily: 'var(--font-heading)',
+                              fontSize: '0.9rem',
+                              fontWeight: 700,
+                              color: 'var(--color-arc)',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              marginBottom: '1rem'
+                            }}>
+                              Submitted Proposals ({jrProposals.length} / 5)
+                            </h4>
+
+                            {jrProposals.length === 0 ? (
+                              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: 0 }}>
+                                No proposals submitted yet. You can upload up to 5 proposals.
+                              </p>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {jrProposals.map((prop) => (
+                                  <div
+                                    key={prop.id}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      background: 'rgba(255, 255, 255, 0.02)',
+                                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                                      borderRadius: 'var(--radius-sm)',
+                                      padding: '0.75rem 1rem',
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
+                                        Proposal File {prop.slot_number}
+                                      </span>
+                                      <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+                                        Submitted at: {prop.created_at}
+                                      </span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                      <button
+                                        type="button"
+                                        className="btn-secondary"
+                                        style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
+                                        onClick={() => handleDownloadJrFile(prop.id)}
+                                        disabled={isLoading}
+                                      >
+                                        Download
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn-secondary"
+                                        style={{
+                                          padding: '0.35rem 0.75rem',
+                                          fontSize: '0.75rem',
+                                          background: 'rgba(255, 107, 107, 0.1)',
+                                          borderColor: 'rgba(255, 107, 107, 0.25)',
+                                          color: '#ff6b6b'
+                                        }}
+                                        onClick={() => {
+                                          setDeleteTarget({ id: prop.id, slotNumber: prop.slot_number });
+                                          setShowDeleteModal(true);
+                                        }}
+                                        disabled={isLoading}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {!isJr && (
+                          <div className="form-group">
+                            <label className="form-label" htmlFor="youtubeUrl">
+                              YouTube Video Link
+                            </label>
                             <input
-                              type="file"
-                              accept="application/pdf"
-                              onChange={handleFileChange}
-                              style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+                              className="form-input"
+                              type="url"
+                              id="youtubeUrl"
+                              value={youtubeUrl}
+                              onChange={e => setYoutubeUrl(e.target.value)}
+                              placeholder="https://www.youtube.com/watch?v=..."
                               required
                               disabled={isLoading}
                             />
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                              <FileText size={32} style={{ color: 'var(--color-text-muted)' }} />
-                              {selectedFile ? (
-                                <div style={{ fontSize: '0.9rem', color: 'var(--color-arc)', fontWeight: 600, marginTop: '0.25rem' }}>
-                                  {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
-                                </div>
-                              ) : (
-                                <>
-                                  <span style={{ fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Click or drag PDF file here</span>
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Maximum size 50MB</span>
-                                </>
-                              )}
+                            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '0.35rem', display: 'block', textAlign: 'left' }}>
+                              Provide the link to your project demonstration video. Ensure it is set to Public or Unlisted.
+                            </span>
+                          </div>
+                        )}
+
+                        {(!isJr || nextSlot !== null) ? (
+                          <div className="form-group">
+                            <label className="form-label">
+                              {isJr ? 'Proposal Document(s) (PDF)' : 'Proposal Document (PDF)'}
+                            </label>
+                            <div
+                              style={{
+                                position: 'relative',
+                                border: '2px dashed rgba(255, 255, 255, 0.08)',
+                                borderRadius: 'var(--radius-md)',
+                                padding: '2.5rem 1.5rem',
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                background: 'rgba(0, 0, 0, 0.15)',
+                                transition: 'var(--transition-fast)'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-arc)'; e.currentTarget.style.background = 'rgba(91, 184, 255, 0.02)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'; e.currentTarget.style.background = 'rgba(0, 0, 0, 0.15)'; }}
+                            >
+                              <input
+                                type="file"
+                                accept="application/pdf"
+                                onChange={handleFileChange}
+                                style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+                                required
+                                disabled={isLoading}
+                                multiple={isJr}
+                              />
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                                <FileText size={32} style={{ color: 'var(--color-text-muted)' }} />
+                                {isJr ? (
+                                  selectedFiles.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
+                                      {selectedFiles.map((file, idx) => (
+                                        <div key={idx} style={{ fontSize: '0.85rem', color: 'var(--color-arc)', fontWeight: 600 }}>
+                                          📁 {file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <span style={{ fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Click or drag PDF files here (You can select multiple)</span>
+                                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Maximum size 50MB per file</span>
+                                    </>
+                                  )
+                                ) : (
+                                  selectedFile ? (
+                                    <div style={{ fontSize: '0.9rem', color: 'var(--color-arc)', fontWeight: 600, marginTop: '0.25rem' }}>
+                                      {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <span style={{ fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Click or drag PDF file here</span>
+                                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Maximum size 50MB</span>
+                                    </>
+                                  )
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div style={{
+                            background: 'rgba(255, 107, 107, 0.08)',
+                            border: '1px solid #ff6b6b',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '1.5rem',
+                            textAlign: 'center',
+                            color: '#ff6b6b',
+                            fontSize: '0.9rem',
+                            marginBottom: '1.5rem'
+                          }}>
+                            Maximum upload limit of 5 proposals reached. Delete an existing proposal file to unlock this upload slot.
+                          </div>
+                        )}
 
                         {uploadProgress > 0 && (
                           <div style={{ marginBottom: '1.5rem' }}>
@@ -839,14 +1084,16 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                             Go Back
                           </button>
 
-                          <button
-                            type="submit"
-                            className="btn-primary"
-                            style={{ padding: '0.5rem 2rem' }}
-                            disabled={isLoading}
-                          >
-                            {isLoading ? <span className="spinner" /> : <>Upload & Submit <Send size={18} /></>}
-                          </button>
+                          {(!isJr || nextSlot !== null) && (
+                            <button
+                              type="submit"
+                              className="btn-primary"
+                              style={{ padding: '0.5rem 2rem' }}
+                              disabled={isLoading}
+                            >
+                              {isLoading ? <span className="spinner" /> : isJr ? <>Upload {selectedFiles.length > 0 ? `${selectedFiles.length} Proposal(s)` : 'Proposal'} <Send size={18} /></> : <>Upload & Submit <Send size={18} /></>}
+                            </button>
+                          )}
                         </div>
                       </form>
                     </motion.div>
@@ -917,6 +1164,136 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
       <div style={{ marginTop: 'auto' }}>
         <CinematicFooter showCards={false} />
       </div>
+
+      {/* Custom Proposal Deletion Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && deleteTarget && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+          }}>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setShowDeleteModal(false); setDeleteTarget(null); }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundColor: 'rgba(1, 14, 19, 0.8)',
+                backdropFilter: 'blur(12px)',
+              }}
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              style={{
+                position: 'relative',
+                width: '100%',
+                maxWidth: '420px',
+                backgroundColor: '#05163D',
+                border: '1px solid rgba(255, 107, 107, 0.25)',
+                borderRadius: 'var(--radius-md)',
+                padding: '2rem',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 107, 107, 0.1)',
+                zIndex: 10,
+                textAlign: 'center',
+              }}
+            >
+              {/* Glow Effect */}
+              <div style={{
+                position: 'absolute',
+                top: '-10%',
+                left: '40%',
+                width: '80px',
+                height: '80px',
+                background: 'rgba(255, 107, 107, 0.3)',
+                filter: 'blur(30px)',
+                borderRadius: '50%',
+                pointerEvents: 'none',
+              }} />
+
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '3.5rem',
+                height: '3.5rem',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                color: '#ff6b6b',
+                marginBottom: '1.25rem',
+                border: '1px solid rgba(255, 107, 107, 0.25)',
+              }}>
+                <AlertCircle size={28} />
+              </div>
+
+              <h3 style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: '1.25rem',
+                fontWeight: 800,
+                color: 'white',
+                margin: '0 0 0.5rem 0',
+              }}>
+                Delete Proposal File {deleteTarget.slotNumber}?
+              </h3>
+
+              <p style={{
+                fontSize: '0.85rem',
+                color: 'var(--color-text-muted)',
+                lineHeight: '1.5',
+                margin: '0 0 2rem 0',
+              }}>
+                Are you sure you want to delete Proposal File {deleteTarget.slotNumber}? This action is permanent and cannot be undone.
+              </p>
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ flex: 1, padding: '0.65rem 1rem' }}
+                  onClick={() => { setShowDeleteModal(false); setDeleteTarget(null); }}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{
+                    flex: 1,
+                    padding: '0.65rem 1rem',
+                    background: 'linear-gradient(135deg, #ff6b6b 0%, #e63946 100%)',
+                    borderColor: '#ff6b6b',
+                    color: 'white',
+                    boxShadow: '0 4px 15px rgba(255, 107, 107, 0.25)',
+                  }}
+                  onClick={async () => {
+                    if (deleteTarget) {
+                      await handleDeleteJrFile(deleteTarget.id);
+                      setShowDeleteModal(false);
+                      setDeleteTarget(null);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  {isLoading ? <span className="spinner" /> : 'Yes, Delete'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

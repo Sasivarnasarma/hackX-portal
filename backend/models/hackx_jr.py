@@ -32,13 +32,30 @@ class HackXJrTeam(Base):
     expectations = Column(Text, nullable=True)
     source = Column(String, nullable=True)
     ambassador_code = Column(String, nullable=True)
-    proposal_link = Column(String, nullable=True)
-    youtube_link = Column(String, nullable=True)
     created_at = Column(DateTime, default=utc_now, nullable=False)
 
     members = relationship(
         "HackXJrMember", back_populates="team", cascade="all, delete-orphan"
     )
+
+    proposals = relationship(
+        "HackXJrProposal", back_populates="team", cascade="all, delete-orphan"
+    )
+
+
+class HackXJrProposal(Base):
+    __tablename__ = "hackx_jr_proposals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    team_id = Column(
+        Integer, ForeignKey("hackx_jr_teams.id", ondelete="CASCADE"), nullable=False
+    )
+    slot_number = Column(Integer, nullable=False)
+    file_name = Column(String, nullable=False)
+    drive_url = Column(String, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+
+    team = relationship("HackXJrTeam", back_populates="proposals")
 
 
 class HackXJrMember(Base):

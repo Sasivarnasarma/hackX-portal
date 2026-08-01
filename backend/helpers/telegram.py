@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+from typing import Optional
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -124,14 +125,19 @@ async def send_telegram_document(file_path: str, caption: str):
 
 
 def format_proposal_submission_message(
-    tier: str, team_id: int, team_name: str, youtube_url: str, drive_url: str, submitter_name: str
+    tier: str, team_id: int, team_name: str, youtube_url: str, drive_url: str, submitter_name: str, slot_number: Optional[int] = None
 ):
     tier_title = "hackX 11.0" if tier == "x" else "hackX Jr. 9.0"
     message = f"🚀 *New Proposal Submitted for {tier_title}!* 🚀\n\n"
     message += f"🏆 *Team ID:* `{team_id}`\n"
     message += f"🏆 *Team Name:* `{_escape_md(team_name)}`\n"
-    message += f"📧 *Submitted By:* `{_escape_md(submitter_name)}`\n\n"
-    message += f"🔗 *YouTube Link:* [Watch here]({youtube_url})\n"
+    message += f"📧 *Submitted By:* `{_escape_md(submitter_name)}`\n"
+    if slot_number:
+        message += f"📂 *Proposal Slot:* `Proposal File {slot_number}`\n\n"
+    else:
+        message += "\n"
+    if youtube_url and youtube_url.strip():
+        message += f"🔗 *YouTube Link:* [Watch here]({youtube_url})\n"
     message += f"🔗 *Google Drive Link:* [View Proposal]({drive_url})\n"
     return message
 

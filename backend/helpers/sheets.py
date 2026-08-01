@@ -343,3 +343,91 @@ async def update_team_proposal_links(
         logger.error(f"Error updating proposal links in Google Sheet [{sheet_name}]: {e}")
         raise e
 
+
+def col_idx_to_letter(col_idx: int) -> str:
+    """Converts a 0-indexed column index to a Google Sheets column letter (e.g. 0 -> A, 27 -> AB)"""
+    letter = ""
+    while col_idx >= 0:
+        letter = chr(col_idx % 26 + 65) + letter
+        col_idx = col_idx // 26 - 1
+    return letter
+
+
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type(Exception),
+    reraise=True,
+)
+async def update_jr_proposal_link_in_sheets(
+    team_id: int, slot_number: int, drive_url: str
+) -> bool:
+    """
+    Finds the row matching team_id in column A for the hackXJr sheet,
+    determines the column index of header 'Proposal File S' (where S = slot_number),
+    and updates/overwrites that cell with the drive_url.
+    """
+    service = get_google_sheets_service()
+    if not service:
+        return False
+
+    try:
+        sheet = service.spreadsheets()
+        
+        # 1. Fetch headers row (row 1) and all team IDs in column A
+        result = await run_in_threadpool(
+            sheet.values().get(
+                spreadsheetId=GOOGLE_SHEET_ID,
+                range="hackXJr!A:A"
+            ).execute
+        )
+        rows = result.get("values", [])
+        
+        row_index = -1
+        for i, row in enumerate(rows):
+            if row and str(row[0]).strip() == str(team_id).strip():
+                row_index = i + 1  # 1-indexed
+                break
+                
+        if row_index == -1:
+            logger.error(f"Could not find Team ID {team_id} in sheet [hackXJr] to update slot {slot_number}.")
+            return False
+
+        # 2. Fetch headers to locate column index for "Proposal File {slot_number}"
+        header_res = await run_in_threadpool(
+            sheet.values().get(
+                spreadsheetId=GOOGLE_SHEET_ID,
+                range="hackXJr!1:1"
+            ).execute
+        )
+        headers = header_res.get("values", [[]])[0]
+        
+        col_name = f"Proposal File {slot_number}"
+        col_index = -1
+        for idx, h in enumerate(headers):
+            if h.strip().lower() == col_name.lower():
+                col_index = idx
+                break
+                
+        if col_index == -1:
+            logger.error(f"Could not find header '{col_name}' in sheet [hackXJr].")
+            return False
+
+        col_letter = col_idx_to_letter(col_index)
+        update_range = f"hackXJr!{col_letter}{row_index}"
+        
+        body = {"values": [[drive_url]]}
+        request = sheet.values().update(
+            spreadsheetId=GOOGLE_SHEET_ID,
+            range=update_range,
+            valueInputOption="USER_ENTERED",
+            body=body,
+        )
+        await run_in_threadpool(request.execute)
+        logger.info(f"Successfully updated {col_name} to '{drive_url}' for Team {team_id} in [hackXJr] row {row_index}.")
+        return True
+    except Exception as e:
+        logger.error(f"Error updating proposal slot {slot_number} in Google Sheet [hackXJr]: {e}")
+        raise e
+
+

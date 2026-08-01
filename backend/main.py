@@ -35,6 +35,7 @@ from helpers.exception_handlers import (  # noqa: E402
     validation_exception_handler,
 )
 from helpers.oauth import verify_oauth_token_on_startup  # noqa: E402
+from helpers.drive import preload_drive_folders  # noqa: E402
 from helpers.otp_store import cleanup_expired_otps  # noqa: E402
 from helpers.email import (  # noqa: E402
     initialize_email_stats_cache,
@@ -78,6 +79,12 @@ async def lifespan(app: FastAPI):
         await run_in_threadpool(verify_oauth_token_on_startup)
     except Exception as e:
         logger.error(f"Lifespan: Google Sheets diagnostic self-checks failed: {e}")
+
+    logger.info("Lifespan: Pre-loading Google Drive subfolder IDs cache...")
+    try:
+        await preload_drive_folders()
+    except Exception as e:
+        logger.error(f"Lifespan: Google Drive subfolder caching failed: {e}")
 
     yield
 

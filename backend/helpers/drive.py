@@ -35,6 +35,31 @@ def get_google_drive_service():
         return None
 
 
+# In-memory Google Drive folder cache
+SUBFOLDER_CACHE = {}
+
+
+async def preload_drive_folders():
+    """Queries Google Drive for 'HackX' and 'HackX JR' subfolders on startup and caches their IDs."""
+    if not GOOGLE_DRIVE_MAIN_FOLDER_ID:
+        logger.warning("Google Drive preloader: GOOGLE_DRIVE_MAIN_FOLDER_ID not set. Skipping preloading.")
+        return
+        
+    service = get_google_drive_service()
+    if not service:
+        logger.warning("Google Drive preloader: Service not available. Skipping preloading.")
+        return
+
+    logger.info("Google Drive preloader: Pre-fetching and caching subfolder IDs on startup...")
+    for name in ["HackX", "HackX JR"]:
+        try:
+            folder_id = await get_or_create_subfolder(GOOGLE_DRIVE_MAIN_FOLDER_ID, name)
+            SUBFOLDER_CACHE[name] = folder_id
+            logger.info(f"Google Drive preloader: Cached '{name}' -> {folder_id}")
+        except Exception as e:
+            logger.error(f"Google Drive preloader: Failed to preload and cache '{name}': {e}")
+
+
 @retry(
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -44,8 +69,11 @@ def get_google_drive_service():
 async def get_or_create_subfolder(parent_id: str, folder_name: str) -> str:
     """
     Finds a subfolder by name within a parent folder.
-    Creates it if it does not exist. Retries up to 5 times.
+    Creates it if it does not exist. Retries up to 5 times. Use in-memory cache if available.
     """
+    if folder_name in SUBFOLDER_CACHE:
+        return SUBFOLDER_CACHE[folder_name]
+
     service = get_google_drive_service()
     if not service:
         raise Exception("Google Drive service not available.")
@@ -68,8 +96,10 @@ async def get_or_create_subfolder(parent_id: str, folder_name: str) -> str:
 
         files = results.get('files', [])
         if files:
-            logger.info(f"Google Drive: Found existing subfolder '{folder_name}' with ID: {files[0]['id']}")
-            return files[0]['id']
+            folder_id = files[0]['id']
+            SUBFOLDER_CACHE[folder_name] = folder_id
+            logger.info(f"Google Drive: Found existing subfolder '{folder_name}' with ID: {folder_id}")
+            return folder_id
 
         # 2. Create the folder if not found
         file_metadata = {
@@ -82,8 +112,10 @@ async def get_or_create_subfolder(parent_id: str, folder_name: str) -> str:
             fields='id',
             supportsAllDrives=True
         ).execute()
-        logger.info(f"Google Drive: Created new subfolder '{folder_name}' with ID: {folder.get('id')}")
-        return folder.get('id')
+        folder_id = folder.get('id')
+        SUBFOLDER_CACHE[folder_name] = folder_id
+        logger.info(f"Google Drive: Created new subfolder '{folder_name}' with ID: {folder_id}")
+        return folder_id
 
     return await run_in_threadpool(_sync_find_or_create)
 

@@ -804,7 +804,7 @@ const RegisterJr: React.FC = () => {
                       className="form-input"
                       type="text"
                       id="schoolName"
-                      placeholder="e.g. Royal College"
+                      placeholder="e.g. Your School Name"
                       value={schoolName}
                       onChange={(e) => setSchoolName(e.target.value)}
                       maxLength={100}

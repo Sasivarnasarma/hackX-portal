@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation, Navigate, Link } from 'react-router-dom';
+import { useLocation, Navigate, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Check, Compass, ExternalLink } from 'lucide-react';
 import OceanBackground from '../components/OceanBackground';
@@ -12,6 +12,7 @@ interface ProposalSuccessProps {
 
 const ProposalSuccess: React.FC<ProposalSuccessProps> = ({ tier }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const state = location.state as any;
 
   useEffect(() => {
@@ -89,7 +90,7 @@ const ProposalSuccess: React.FC<ProposalSuccessProps> = ({ tier }) => {
 
               <p className="text-sm text-slate-400 mb-8 leading-relaxed">
                 {isJr ? (
-                  <>Congratulations! The project proposal blueprint for team <strong>{teamName}</strong> has been submitted successfully.</>
+                  <>Congratulations! <strong>{state?.slotNumbers && state.slotNumbers.length > 0 ? `Proposal Files ${state.slotNumbers.join(', ')}` : `Proposal File ${state?.slotNumber || ''}`}</strong> for team <strong>{teamName}</strong> has been submitted successfully.</>
                 ) : (
                   <>Congratulations! The project proposal blueprint and pitch video showcase links for team <strong>{teamName}</strong> have been submitted successfully.</>
                 )}
@@ -101,6 +102,16 @@ const ProposalSuccess: React.FC<ProposalSuccessProps> = ({ tier }) => {
                   <span className="text-slate-500 uppercase tracking-wider">Team Name</span>
                   <strong className="text-white text-sm">{teamName}</strong>
                 </div>
+                {isJr && (state?.slotNumber || (state?.slotNumbers && state.slotNumbers.length > 0)) && (
+                  <div className="flex justify-between items-center pb-2.5 border-b border-slate-900">
+                    <span className="text-slate-500 uppercase tracking-wider">Uploaded Slot(s)</span>
+                    <strong className="text-cyan-400 font-bold">
+                      {state?.slotNumbers && state.slotNumbers.length > 0
+                        ? state.slotNumbers.map((s: number) => `Proposal File ${s}`).join(', ')
+                        : `Proposal File ${state.slotNumber}`}
+                    </strong>
+                  </div>
+                )}
                 {submitter && (
                   <div className="flex justify-between items-center pb-2.5 border-b border-slate-900">
                     <span className="text-slate-500 uppercase tracking-wider">Submitted By</span>
@@ -131,8 +142,31 @@ const ProposalSuccess: React.FC<ProposalSuccessProps> = ({ tier }) => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  className="btn-primary"
+                  style={{ padding: '0.65rem 1.5rem', fontSize: '0.875rem' }}
+                  onClick={() => {
+                    if (isJr) {
+                      navigate('/jr/proposal', {
+                        state: {
+                          jrSessionToken: state?.jrSessionToken,
+                          selectedJrTeam: state?.selectedJrTeam,
+                        }
+                      });
+                    } else {
+                      navigate('/x/proposal', {
+                        state: {
+                          verificationToken: state?.verificationToken,
+                          teamDetails: state?.teamDetails,
+                        }
+                      });
+                    }
+                  }}
+                >
+                  {isJr ? "Manage Proposals" : "Back to Submission"}
+                </button>
                 <Link to="/" style={{ textDecoration: 'none' }}>
-                  <button className="btn-secondary">
+                  <button className="btn-secondary" style={{ padding: '0.65rem 1.5rem', fontSize: '0.875rem' }}>
                     <Compass size={16} />
                     Back to Hub
                   </button>

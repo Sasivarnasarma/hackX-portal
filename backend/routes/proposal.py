@@ -18,7 +18,7 @@ from helpers.security import (
     create_jr_session_token,
     decode_jr_session_token,
 )
-from helpers.sheets import update_team_proposal_links
+from helpers.sheets import update_team_proposal_links, update_jr_proposal_link_in_sheets
 from helpers.telegram import (
     format_proposal_submission_message,
     send_telegram_document,
@@ -26,7 +26,7 @@ from helpers.telegram import (
 )
 from helpers.turnstile import verify_turnstile
 from models.hackx import HackXMember, HackXTeam
-from models.hackx_jr import HackXJrMember, HackXJrTeam
+from models.hackx_jr import HackXJrMember, HackXJrTeam, HackXJrProposal
 
 logger = logging.getLogger(__name__)
 
@@ -342,6 +342,23 @@ async def find_jr_teams(
         )
         team = team_res.scalars().first()
         if team:
+            # Fetch current proposals
+            prop_res = await db.execute(
+                select(HackXJrProposal)
+                .where(HackXJrProposal.team_id == team.id)
+                .order_by(HackXJrProposal.slot_number)
+            )
+            proposals = prop_res.scalars().all()
+            proposals_data = [
+                {
+                    "id": p.id,
+                    "slot_number": p.slot_number,
+                    "file_name": p.file_name,
+                    "drive_url": p.drive_url,
+                    "created_at": p.created_at.strftime("%Y-%m-%d %H:%M:%S") if p.created_at else "",
+                }
+                for p in proposals
+            ]
             matching_teams.append({
                 "team_id": team.id,
                 "team_name": team.name,
@@ -349,9 +366,8 @@ async def find_jr_teams(
                 "leader_name": leader.name,
                 "leader_phone": leader.phone,
                 "leader_email": leader.email,
-                "proposal_link": team.proposal_link,
-                "youtube_link": team.youtube_link,
-                "has_submitted": bool(team.proposal_link or team.youtube_link),
+                "proposals": proposals_data,
+                "has_submitted": len(proposals_data) > 0,
             })
 
     # Generate a signed jr session token
@@ -371,8 +387,8 @@ async def submit_proposal_jr(
     background_tasks: BackgroundTasks,
     jr_session_token: str = Form(...),
     team_id: int = Form(...),
-    youtube_url: str = Form(...),
-    file: UploadFile = File(...),
+    youtube_url: str = Form(""),
+    files: list[UploadFile] = File(...),
     db: AsyncSession = Depends(get_db),
 ):
     session_query = decode_jr_session_token(jr_session_token)
@@ -382,12 +398,13 @@ async def submit_proposal_jr(
             detail="Invalid or expired session. Please identify the team leader details again.",
         )
 
-    # Check file type
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(
-            status_code=400,
-            detail="Only PDF proposal uploads are supported.",
-        )
+    # Check file types
+    for f in files:
+        if not f.filename.lower().endswith(".pdf"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Only PDF proposal uploads are supported. Invalid file: {f.filename}",
+            )
 
     # Verify team exists
     team_res = await db.execute(
@@ -414,90 +431,136 @@ async def submit_proposal_jr(
             detail="Unauthorized. The selected team does not correspond to this verification session.",
         )
 
-    youtube_id = extract_youtube_id(youtube_url)
-    youtube_clean_url = f"https://www.youtube.com/watch?v={youtube_id}"
+    # Find existing proposals to determine slots and check limit
+    prop_res = await db.execute(
+        select(HackXJrProposal).where(HackXJrProposal.team_id == team.id)
+    )
+    existing_proposals = prop_res.scalars().all()
+    if len(existing_proposals) + len(files) > 5:
+        remaining = 5 - len(existing_proposals)
+        raise HTTPException(
+            status_code=400,
+            detail=f"You can only upload up to {remaining} more proposal(s). You selected {len(files)} files.",
+        )
 
-    # Spool file to persistent submissions folder
+    occupied_slots = {p.slot_number for p in existing_proposals}
+    
     os.makedirs("submissions", exist_ok=True)
     sanitized_team_name = team.name.replace(" ", "_").replace("/", "-")
-    file_key = f"{team.id}_{sanitized_team_name}_proposal_jr.pdf"
-    file_path = os.path.join("submissions", file_key)
+    
+    batch_data = []
+    for f in files:
+        # Find the lowest available slot number (1-5)
+        slot_number = 1
+        for s in range(1, 6):
+            if s not in occupied_slots:
+                slot_number = s
+                break
+        occupied_slots.add(slot_number)
 
-    content = await file.read()
-    with open(file_path, "wb") as buffer:
-        buffer.write(content)
+        # Spool file to persistent submissions folder
+        file_key = f"{team.id}_{sanitized_team_name}_proposal_jr_{slot_number}.pdf"
+        file_path = os.path.join("submissions", file_key)
 
-    # Schedule background processing
+        content = await f.read()
+        with open(file_path, "wb") as buffer:
+            buffer.write(content)
+
+        batch_data.append({
+            "file_path": file_path,
+            "file_key": file_key,
+            "slot_number": slot_number
+        })
+
+    # Schedule background batch processing
     background_tasks.add_task(
-        process_background_proposal_jr,
+        process_background_proposals_jr_batch,
         team.id,
         team.name,
-        file_path,
-        file_key,
-        youtube_clean_url,
+        batch_data,
         leader.name,
         leader.email if leader.email else "",
     )
 
-    return {"status": "success", "message": "Junior Proposal submission queued successfully."}
+    return {"status": "success", "message": f"Successfully queued {len(files)} proposals for submission."}
 
 
-async def process_background_proposal_jr(
+async def process_background_proposals_jr_batch(
     team_id: int,
     team_name: str,
-    file_path: str,
-    file_key: str,
-    youtube_url: str,
+    batch_data: list[dict],
     leader_name: str,
     leader_email: str,
 ):
     try:
-        # 1. Upload to Google Drive folder HackX JR
-        drive_id = await upload_file_to_google_drive(
-            file_path=file_path,
-            filename=file_key,
-            folder_name="HackX JR",
-        )
+        # 1. Process and upload each file in the batch
+        for item in batch_data:
+            file_path = item["file_path"]
+            file_key = item["file_key"]
+            slot_number = item["slot_number"]
 
-        drive_url = f"https://drive.google.com/file/d/{drive_id}/view" if not drive_id.startswith("Bypassed") else "Bypassed"
+            try:
+                # Upload to Google Drive folder HackX JR
+                drive_id = await upload_file_to_google_drive(
+                    file_path=file_path,
+                    filename=file_key,
+                    folder_name="HackX JR",
+                )
 
-        # 2. Update DB
-        async with AsyncSessionLocal() as session:
-            team_res = await session.execute(
-                select(HackXJrTeam).where(HackXJrTeam.id == team_id)
-            )
-            team = team_res.scalars().first()
-            if team:
-                team.proposal_link = drive_url
-                team.youtube_link = youtube_url
-                await session.commit()
-                logger.info(f"Successfully saved proposal links to database for HackX Jr Team {team_id}.")
+                drive_url = f"https://drive.google.com/file/d/{drive_id}/view" if not drive_id.startswith("Bypassed") else "Bypassed"
 
-        # 3. Update Sheets
-        await update_team_proposal_links(
-            sheet_name="hackXJr",
-            team_id=team_id,
-            youtube_url=youtube_url,
-            drive_url=drive_url,
-        )
+                # Update DB
+                async with AsyncSessionLocal() as session:
+                    # Overwrite check for unique slot
+                    prop_res = await session.execute(
+                        select(HackXJrProposal).where(
+                            HackXJrProposal.team_id == team_id,
+                            HackXJrProposal.slot_number == slot_number,
+                        )
+                    )
+                    proposal = prop_res.scalars().first()
+                    if not proposal:
+                        proposal = HackXJrProposal(
+                            team_id=team_id,
+                            slot_number=slot_number,
+                            file_name=file_key,
+                            drive_url=drive_url,
+                        )
+                        session.add(proposal)
+                    else:
+                        proposal.file_name = file_key
+                        proposal.drive_url = drive_url
+                    await session.commit()
+                    logger.info(f"Successfully saved proposal for HackX Jr Team {team_id} at slot {slot_number}.")
 
-        # 4. Telegram alerts
-        telegram_caption = format_proposal_submission_message(
-            tier="jr",
-            team_id=team_id,
-            team_name=team_name,
-            youtube_url=youtube_url,
-            drive_url=drive_url,
-            submitter_name=leader_name,
-        )
-        if os.path.exists(file_path):
-            doc_sent = await send_telegram_document(file_path, telegram_caption)
-            if not doc_sent:
-                await send_telegram_notification(telegram_caption)
-        else:
-            await send_telegram_notification(telegram_caption)
+                # Update Sheets
+                await update_jr_proposal_link_in_sheets(
+                    team_id=team_id,
+                    slot_number=slot_number,
+                    drive_url=drive_url,
+                )
 
-        # 5. Email (if leader email is available)
+                # Telegram alerts
+                telegram_caption = format_proposal_submission_message(
+                    tier="jr",
+                    team_id=team_id,
+                    team_name=team_name,
+                    youtube_url="",
+                    drive_url=drive_url,
+                    submitter_name=leader_name,
+                    slot_number=slot_number,
+                )
+                if os.path.exists(file_path):
+                    doc_sent = await send_telegram_document(file_path, telegram_caption)
+                    if not doc_sent:
+                        await send_telegram_notification(telegram_caption)
+                else:
+                    await send_telegram_notification(telegram_caption)
+
+            except Exception as item_err:
+                logger.error(f"Error processing proposal slot {slot_number} in batch: {item_err}")
+
+        # 2. Send exactly ONE email notification to the team leader after the whole batch is finished
         if leader_email:
             await send_proposal_submitted_email(
                 to_email=leader_email,
@@ -529,8 +592,108 @@ async def process_background_proposal_jr(
                                 domain="hackx_jr",
                             )
 
-        # Persistent storage of submissions retains the file in submissions/ folder.
-        pass
-
     except Exception as e:
-        logger.error(f"Failed to process background proposal for HackX Jr Team {team_id}: {e}")
+        logger.error(f"Failed to process background batch proposals for HackX Jr Team {team_id}: {e}")
+
+
+from fastapi.responses import FileResponse
+
+@router.get("/download-jr/{proposal_id}")
+async def download_proposal_jr(
+    proposal_id: int,
+    jr_session_token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    session_query = decode_jr_session_token(jr_session_token)
+    if not session_query:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired session. Please log in again.",
+        )
+
+    # Fetch proposal
+    prop_res = await db.execute(
+        select(HackXJrProposal).where(HackXJrProposal.id == proposal_id)
+    )
+    proposal = prop_res.scalars().first()
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found.")
+
+    # Fetch leader of this team
+    leader_res = await db.execute(
+        select(HackXJrMember).where(
+            HackXJrMember.team_id == proposal.team_id,
+            HackXJrMember.is_leader == True
+        )
+    )
+    leader = leader_res.scalars().first()
+    if not leader or (leader.email.strip().lower() != session_query.strip().lower() and leader.phone.strip() != session_query.strip()):
+        raise HTTPException(status_code=403, detail="Access denied to this proposal.")
+
+    file_path = os.path.join("submissions", proposal.file_name)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Physical proposal file not found on server.")
+
+    return FileResponse(
+        path=file_path,
+        filename=proposal.file_name,
+        media_type="application/pdf"
+    )
+
+
+@router.delete("/delete-jr/{proposal_id}")
+async def delete_proposal_jr(
+    proposal_id: int,
+    jr_session_token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    session_query = decode_jr_session_token(jr_session_token)
+    if not session_query:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired session. Please log in again.",
+        )
+
+    # Fetch proposal
+    prop_res = await db.execute(
+        select(HackXJrProposal).where(HackXJrProposal.id == proposal_id)
+    )
+    proposal = prop_res.scalars().first()
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found.")
+
+    # Fetch leader of this team
+    leader_res = await db.execute(
+        select(HackXJrMember).where(
+            HackXJrMember.team_id == proposal.team_id,
+            HackXJrMember.is_leader == True
+        )
+    )
+    leader = leader_res.scalars().first()
+    if not leader or (leader.email.strip().lower() != session_query.strip().lower() and leader.phone.strip() != session_query.strip()):
+        raise HTTPException(status_code=403, detail="Access denied to this proposal.")
+
+    # Delete physical file from disk
+    file_path = os.path.join("submissions", proposal.file_name)
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+            logger.info(f"Deleted local file {file_path}")
+        except Exception as e:
+            logger.error(f"Failed to delete local file {file_path}: {e}")
+
+    # Delete from Google Sheets (clear the specific proposal column index)
+    try:
+        await update_jr_proposal_link_in_sheets(
+            team_id=proposal.team_id,
+            slot_number=proposal.slot_number,
+            drive_url="",
+        )
+    except Exception as e:
+        logger.error(f"Failed to clear Google Sheets column for slot {proposal.slot_number}: {e}")
+
+    # Delete from database
+    await db.delete(proposal)
+    await db.commit()
+
+    return {"status": "success", "message": f"Proposal File {proposal.slot_number} deleted successfully."}
