@@ -142,29 +142,31 @@ const ProposalSuccess: React.FC<ProposalSuccessProps> = ({ tier }) => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  className="btn-primary"
-                  style={{ padding: '0.65rem 1.5rem', fontSize: '0.875rem' }}
-                  onClick={() => {
-                    if (isJr) {
-                      navigate('/jr/proposal', {
-                        state: {
-                          jrSessionToken: state?.jrSessionToken,
-                          selectedJrTeam: state?.selectedJrTeam,
-                        }
-                      });
-                    } else {
-                      navigate('/x/proposal', {
-                        state: {
-                          verificationToken: state?.verificationToken,
-                          teamDetails: state?.teamDetails,
-                        }
-                      });
-                    }
-                  }}
-                >
-                  {isJr ? "Manage Proposals" : "Back to Submission"}
-                </button>
+                {!(isJr && state?.isFirstTime) && (
+                  <button
+                    className="btn-primary"
+                    style={{ padding: '0.65rem 1.5rem', fontSize: '0.875rem' }}
+                    onClick={() => {
+                      if (isJr) {
+                        navigate('/jr/proposal', {
+                          state: {
+                            jrSessionToken: state?.jrSessionToken,
+                            selectedJrTeam: state?.selectedJrTeam,
+                          }
+                        });
+                      } else {
+                        navigate('/x/proposal', {
+                          state: {
+                            verificationToken: state?.verificationToken,
+                            teamDetails: state?.teamDetails,
+                          }
+                        });
+                      }
+                    }}
+                  >
+                    {isJr ? "Manage Proposals" : "Back to Submission"}
+                  </button>
+                )}
                 <Link to="/" style={{ textDecoration: 'none' }}>
                   <button className="btn-secondary" style={{ padding: '0.65rem 1.5rem', fontSize: '0.875rem' }}>
                     <Compass size={16} />

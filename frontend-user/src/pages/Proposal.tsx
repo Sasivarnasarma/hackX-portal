@@ -360,6 +360,11 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
           setSelectedFiles([]);
           return;
         }
+        if (jrProposals.length > 0 && filesArray.length > 1) {
+          setError('You can only upload one proposal at a time.');
+          setSelectedFiles([]);
+          return;
+        }
         setError(null);
         setSelectedFiles(filesArray);
       } else {
@@ -474,6 +479,7 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
         slotNumbers: occupiedSlots,
         jrSessionToken: jrSessionToken,
         selectedJrTeam: selectedJrTeam,
+        isFirstTime: jrProposals.length === 0,
       };
     }
 
@@ -526,14 +532,14 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
           <div className="ambient-glow-right" />
 
           <div className="split-container">
-            
+
             {/* Left Form Column */}
-            <div 
-              className="form-column" 
-              onMouseMove={handleMouseMove} 
-              style={{ 
-                "--mouse-x": `${mousePosition.x}px`, 
-                "--mouse-y": `${mousePosition.y}px` 
+            <div
+              className="form-column"
+              onMouseMove={handleMouseMove}
+              style={{
+                "--mouse-x": `${mousePosition.x}px`,
+                "--mouse-y": `${mousePosition.y}px`
               } as React.CSSProperties}
             >
               <div className="mouse-spotlight" />
@@ -580,7 +586,7 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
 
               <div className="form-content-wrapper">
                 <AnimatePresence mode="wait">
-                  
+
                   {/* Step 1 Form (HackX Email Input) */}
                   {!isJr && stage === 1 && (
                     <motion.div
@@ -629,7 +635,7 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                         <h3 style={{ fontFamily: 'var(--font-heading)', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                           Identify Team
                         </h3>
-                        
+
                         <div className="form-group">
                           <label className="form-label" htmlFor="jrQuery">
                             Leader's Email or Phone Number
@@ -880,7 +886,7 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                           </div>
                         )}
 
-                        {isJr && (
+                        {isJr && jrProposals.length > 0 && (
                           <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
                             <h4 style={{
                               fontFamily: 'var(--font-heading)',
@@ -894,66 +900,60 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                               Submitted Proposals ({jrProposals.length} / 5)
                             </h4>
 
-                            {jrProposals.length === 0 ? (
-                              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: 0 }}>
-                                No proposals submitted yet. You can upload up to 5 proposals.
-                              </p>
-                            ) : (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                {jrProposals.map((prop) => (
-                                  <div
-                                    key={prop.id}
-                                    style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'space-between',
-                                      background: 'rgba(255, 255, 255, 0.02)',
-                                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                                      borderRadius: 'var(--radius-sm)',
-                                      padding: '0.75rem 1rem',
-                                    }}
-                                  >
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
-                                        Proposal File {prop.slot_number}
-                                      </span>
-                                      <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
-                                        Submitted at: {prop.created_at}
-                                      </span>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                      <button
-                                        type="button"
-                                        className="btn-secondary"
-                                        style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
-                                        onClick={() => handleDownloadJrFile(prop.id)}
-                                        disabled={isLoading}
-                                      >
-                                        Download
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="btn-secondary"
-                                        style={{
-                                          padding: '0.35rem 0.75rem',
-                                          fontSize: '0.75rem',
-                                          background: 'rgba(255, 107, 107, 0.1)',
-                                          borderColor: 'rgba(255, 107, 107, 0.25)',
-                                          color: '#ff6b6b'
-                                        }}
-                                        onClick={() => {
-                                          setDeleteTarget({ id: prop.id, slotNumber: prop.slot_number });
-                                          setShowDeleteModal(true);
-                                        }}
-                                        disabled={isLoading}
-                                      >
-                                        Delete
-                                      </button>
-                                    </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                              {jrProposals.map((prop) => (
+                                <div
+                                  key={prop.id}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    background: 'rgba(255, 255, 255, 0.02)',
+                                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    padding: '0.75rem 1rem',
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
+                                      Proposal File {prop.slot_number}
+                                    </span>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+                                      Submitted at: {prop.created_at}
+                                    </span>
                                   </div>
-                                ))}
-                              </div>
-                            )}
+                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button
+                                      type="button"
+                                      className="btn-secondary"
+                                      style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
+                                      onClick={() => handleDownloadJrFile(prop.id)}
+                                      disabled={isLoading}
+                                    >
+                                      Download
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn-secondary"
+                                      style={{
+                                        padding: '0.35rem 0.75rem',
+                                        fontSize: '0.75rem',
+                                        background: 'rgba(255, 107, 107, 0.1)',
+                                        borderColor: 'rgba(255, 107, 107, 0.25)',
+                                        color: '#ff6b6b'
+                                      }}
+                                      onClick={() => {
+                                        setDeleteTarget({ id: prop.id, slotNumber: prop.slot_number });
+                                        setShowDeleteModal(true);
+                                      }}
+                                      disabled={isLoading}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
 
@@ -1004,7 +1004,7 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                                 style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
                                 required
                                 disabled={isLoading}
-                                multiple={isJr}
+                                multiple={isJr && jrProposals.length === 0}
                               />
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                                 <FileText size={32} style={{ color: 'var(--color-text-muted)' }} />
@@ -1018,10 +1018,17 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                                       ))}
                                     </div>
                                   ) : (
-                                    <>
-                                      <span style={{ fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Click or drag PDF files here (You can select multiple)</span>
-                                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Maximum size 50MB per file</span>
-                                    </>
+                                    jrProposals.length === 0 ? (
+                                      <>
+                                        <span style={{ fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Click or drag PDF file here</span>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Maximum size 50MB per file</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span style={{ fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Click or drag PDF file here</span>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Maximum size 50MB</span>
+                                      </>
+                                    )
                                   )
                                 ) : (
                                   selectedFile ? (
@@ -1091,7 +1098,7 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                               style={{ padding: '0.5rem 2rem' }}
                               disabled={isLoading}
                             >
-                              {isLoading ? <span className="spinner" /> : isJr ? <>Upload {selectedFiles.length > 0 ? `${selectedFiles.length} Proposal(s)` : 'Proposal'} <Send size={18} /></> : <>Upload & Submit <Send size={18} /></>}
+                              {isLoading ? <span className="spinner" /> : (isJr && jrProposals.length > 0) ? <>Upload {selectedFiles.length > 0 ? `${selectedFiles.length} Proposal(s)` : 'Proposal'} <Send size={18} /></> : <>Upload & Submit <Send size={18} /></>}
                             </button>
                           )}
                         </div>
@@ -1106,10 +1113,10 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
             {/* Right Info Column */}
             <div className="info-column">
               <div className="info-logo-container">
-                <img 
-                  src={isJr ? "/Logos/hackxJr-logo.webp" : "/Logos/hackx-logo.webp"} 
-                  alt={isJr ? "hackX Jr. 9.0" : "hackX 11.0"} 
-                  className="info-logo" 
+                <img
+                  src={isJr ? "/Logos/hackxJr-logo.webp" : "/Logos/hackx-logo.webp"}
+                  alt={isJr ? "hackX Jr. 9.0" : "hackX 11.0"}
+                  className="info-logo"
                 />
               </div>
 
