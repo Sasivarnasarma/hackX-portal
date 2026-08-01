@@ -559,6 +559,12 @@ body::before {
 /* ── Custom Select ─────────────────────────────────────────── */
 .custom-select-wrapper {
   position: relative;
+  z-index: 1;
+}
+
+.custom-select-wrapper.open,
+.custom-select-wrapper:focus-within {
+  z-index: 50;
 }
 
 .custom-select-trigger {
@@ -595,8 +601,10 @@ body::before {
   border: 1px solid rgba(91, 184, 255, 0.2);
   border-radius: var(--radius-sm);
   margin-top: 0.5rem;
-  max-height: 200px;
+  max-height: 260px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.35rem 0;
   z-index: 100;
   box-shadow: 0 12px 40px rgba(1, 0, 20, 0.7);
 }
@@ -1360,6 +1368,35 @@ input[type="checkbox"]:focus-visible {
   --card: rgba(5, 46, 63, 0.45);
   
   background-color: var(--color-void);
+}
+
+.hackx-jr-theme .custom-select-trigger:focus,
+.hackx-jr-theme .custom-select-trigger.open {
+  border-color: var(--color-electric);
+  box-shadow:
+    0 0 0 3px rgba(114, 229, 248, 0.18),
+    0 0 12px rgba(114, 229, 248, 0.15);
+}
+
+.hackx-jr-theme .custom-options-list {
+  background: rgba(1, 14, 19, 0.96);
+  border: 1px solid rgba(114, 229, 248, 0.25);
+  box-shadow: 0 12px 40px rgba(1, 14, 19, 0.85);
+}
+
+.hackx-jr-theme .custom-options-list::-webkit-scrollbar-thumb {
+  background: var(--color-horizon);
+}
+
+.hackx-jr-theme .custom-option:hover {
+  background: rgba(114, 229, 248, 0.15);
+  color: var(--color-arc);
+}
+
+.hackx-jr-theme .custom-option.selected {
+  background: rgba(114, 229, 248, 0.25);
+  color: var(--color-arc);
+  font-weight: 600;
 }
 
 .hackx-jr-theme .ambient-light-1 {

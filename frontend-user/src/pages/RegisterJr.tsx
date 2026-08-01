@@ -42,10 +42,12 @@ const DISTRICTS_LIST = [
 ];
 
 const JR_SOURCE_OPTIONS = [
+  { value: 'Awareness Session', label: 'Awareness Session' },
   { value: 'Social Media', label: 'Social Media' },
   { value: 'Friends', label: 'Friends' },
   { value: 'School/Teacher', label: 'School/Teacher' },
   { value: 'Previous Participant', label: 'Previous Participant' },
+  { value: 'Awareness Session', label: 'Awareness Session' },
   { value: 'Other', label: 'Other' }
 ];
 
@@ -564,7 +566,7 @@ const RegisterJr: React.FC = () => {
       sessionStorage.removeItem('hackx_ambassador_code');
       clearJrData();
       clearXData();
-      navigate('/success');
+      navigate('/jr/registration-success');
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         setError('Your email verification session has expired. Please verify your email again.');
@@ -802,7 +804,7 @@ const RegisterJr: React.FC = () => {
                       className="form-input"
                       type="text"
                       id="schoolName"
-                      placeholder="e.g. Royal College"
+                      placeholder="e.g. Your School Name"
                       value={schoolName}
                       onChange={(e) => setSchoolName(e.target.value)}
                       maxLength={100}
@@ -815,7 +817,7 @@ const RegisterJr: React.FC = () => {
                   {/* School District Dropdown */}
                   <div className="form-group" ref={districtDropdownRef} id="schoolDistrict">
                     <label className="form-label">School District</label>
-                    <div className="custom-select-wrapper">
+                    <div className={`custom-select-wrapper ${isDistrictDropdownOpen ? 'open' : ''}`}>
                       <div
                         className={`custom-select-trigger ${isDistrictDropdownOpen ? 'open' : ''}`}
                         onClick={() => setIsDistrictDropdownOpen(!isDistrictDropdownOpen)}
@@ -1027,7 +1029,7 @@ const RegisterJr: React.FC = () => {
 
                   <div className="form-group" ref={sourceDropdownRef} id="source">
                     <label className="form-label">How did you hear about hackX Jr? (Optional)</label>
-                    <div className="custom-select-wrapper">
+                    <div className={`custom-select-wrapper ${isSourceDropdownOpen ? 'open' : ''}`}>
                       <div
                         className={`custom-select-trigger ${isSourceDropdownOpen ? 'open' : ''}`}
                         onClick={() => setIsSourceDropdownOpen(!isSourceDropdownOpen)}

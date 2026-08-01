@@ -2,10 +2,76 @@
 
 import * as React from "react";
 import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { ArrowLeft, UserPlus, FileUp } from "lucide-react";
+
+function AnimatedRegistrationIcon({ isJr }: { isJr: boolean }) {
+  const primaryColor = isJr ? "#72e5f8" : "#5bb8ff";
+  const glowRgb = isJr ? "114, 229, 248" : "91, 184, 255";
+
+  return (
+    <div className="relative flex items-center justify-center w-16 h-16 rounded-2xl my-1 mx-auto">
+      <motion.div
+        className="absolute inset-0 rounded-2xl"
+        animate={{
+          boxShadow: [
+            `0 0 15px rgba(${glowRgb}, 0.2), inset 0 0 10px rgba(${glowRgb}, 0.1)`,
+            `0 0 30px rgba(${glowRgb}, 0.45), inset 0 0 20px rgba(${glowRgb}, 0.25)`,
+            `0 0 15px rgba(${glowRgb}, 0.2), inset 0 0 10px rgba(${glowRgb}, 0.1)`,
+          ],
+        }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          background: `linear-gradient(135deg, rgba(${glowRgb}, 0.15) 0%, rgba(${glowRgb}, 0.04) 100%)`,
+          border: `1px solid rgba(${glowRgb}, 0.35)`,
+        }}
+      />
+      <motion.div
+        animate={{ y: [0, -3, 0] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        className="relative z-10 flex items-center justify-center pl-[2px]"
+      >
+        <UserPlus size={30} style={{ color: primaryColor, filter: `drop-shadow(0 0 8px rgba(${glowRgb}, 0.6))` }} />
+      </motion.div>
+    </div>
+  );
+}
+
+function AnimatedProposalIcon({ isJr }: { isJr: boolean }) {
+  const primaryColor = isJr ? "#72e5f8" : "#5bb8ff";
+  const glowRgb = isJr ? "114, 229, 248" : "91, 184, 255";
+
+  return (
+    <div className="relative flex items-center justify-center w-16 h-16 rounded-2xl my-1 mx-auto">
+      <motion.div
+        className="absolute inset-0 rounded-2xl"
+        animate={{
+          boxShadow: [
+            `0 0 15px rgba(${glowRgb}, 0.2), inset 0 0 10px rgba(${glowRgb}, 0.1)`,
+            `0 0 30px rgba(${glowRgb}, 0.45), inset 0 0 20px rgba(${glowRgb}, 0.25)`,
+            `0 0 15px rgba(${glowRgb}, 0.2), inset 0 0 10px rgba(${glowRgb}, 0.1)`,
+          ],
+        }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        style={{
+          background: `linear-gradient(135deg, rgba(${glowRgb}, 0.15) 0%, rgba(${glowRgb}, 0.04) 100%)`,
+          border: `1px solid rgba(${glowRgb}, 0.35)`,
+        }}
+      />
+      <motion.div
+        animate={{ y: [1, -4, 1] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        className="relative z-10 flex items-center justify-center"
+      >
+        <FileUp size={30} style={{ color: primaryColor, filter: `drop-shadow(0 0 8px rgba(${glowRgb}, 0.6))` }} />
+      </motion.div>
+    </div>
+  );
+}
 
 // Register ScrollTrigger safely for React
 if (typeof window !== "undefined") {
@@ -240,6 +306,8 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
   const headingRef = useRef<HTMLHeadingElement>(null);
   const linksRef = useRef<HTMLDivElement>(null);
 
+  const [selectedTier, setSelectedTier] = React.useState<"x" | "jr" | null>(null);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!wrapperRef.current) return;
@@ -278,7 +346,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
     }, wrapperRef);
 
     return () => ctx.revert();
-  },[]);
+  }, [selectedTier]);
 
 
   return (
@@ -309,68 +377,143 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
 
           {/* 2. Main Center Content */}
           {showCards && (
-            <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 sm:px-6 pb-0 sm:pb-32 md:pb-40 pt-8 sm:pt-0 w-full max-w-5xl mx-auto">
+            <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 sm:px-6 pb-12 sm:pb-24 pt-8 sm:pt-0 w-full max-w-5xl mx-auto">
               <h2
-              ref={headingRef}
-              className="text-4xl sm:text-5xl md:text-8xl font-black footer-text-glow tracking-tighter mb-8 md:mb-12 text-center uppercase"
-            >
-              Ready to begin?
-            </h2>
+                ref={headingRef}
+                className="text-4xl sm:text-5xl md:text-7xl font-black footer-text-glow tracking-tighter mb-8 md:mb-12 text-center uppercase"
+              >
+                {!selectedTier ? "Ready to begin?" : selectedTier === "x" ? "hackX 11.0" : "hackX Jr. 9.0"}
+              </h2>
 
-            {/* Interactive Magnetic Pills Layout */}
-            <div ref={linksRef} className="flex flex-col items-center gap-8 md:gap-12 w-full mt-4">
-              
-              {/* Registration Cards */}
-              <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-6 sm:gap-8 md:gap-12 w-full max-w-6xl">
+              {/* Interactive Magnetic Pills Layout */}
+              <div ref={linksRef} className="flex flex-col items-center gap-8 md:gap-12 w-full mt-4">
                 
-                {/* hackX 11.0 Card */}
-                <motion.a 
-                  href="/x" 
-                  className="no-underline w-full sm:w-auto flex justify-center"
-                  initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
-                  whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                  whileHover={{ y: -8 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="hub-card cursor-pointer w-full">
-                    <div className="hub-card-badge">University Tier</div>
-                    <div className="hub-card-logo-container">
-                      <img src="/Logos/hackx-logo.webp" alt="hackX 11.0" className="hub-card-logo" />
-                    </div>
-                    <div className="flex flex-col items-center text-center">
-                      <h3 className="hub-card-title text-foreground">hackX 11.0</h3>
-                      <p className="hub-card-desc text-muted-foreground">Sri Lanka's premier inter-university startup challenge</p>
-                    </div>
-                  </div>
-                </motion.a>
+                {/* Step 1: Select Tier */}
+                {!selectedTier && (
+                  <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-6 sm:gap-8 md:gap-12 w-full max-w-6xl">
+                    
+                    {/* hackX 11.0 Card */}
+                    <motion.div 
+                      className="no-underline w-full sm:w-auto flex justify-center"
+                      initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+                      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                      whileHover={{ y: -8 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedTier("x")}
+                    >
+                      <div className="hub-card cursor-pointer w-full">
+                        <div className="hub-card-badge">University Tier</div>
+                        <div className="hub-card-logo-container">
+                          <img src="/Logos/hackx-logo.webp" alt="hackX 11.0" className="hub-card-logo" />
+                        </div>
+                        <div className="flex flex-col items-center text-center">
+                          <h3 className="hub-card-title text-foreground">hackX 11.0</h3>
+                          <p className="hub-card-desc text-muted-foreground">Sri Lanka's premier inter-university startup challenge</p>
+                        </div>
+                      </div>
+                    </motion.div>
 
-                {/* hackX Jr. 9.0 Card */}
-                <motion.a 
-                  href="/jr" 
-                  className="no-underline w-full sm:w-auto flex justify-center"
-                  initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
-                  whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                  whileHover={{ y: -8 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="hub-card hackx-jr-theme cursor-pointer w-full" onClick={() => window.location.href = '/jr'}>
-                    <div className="hub-card-badge">School Tier</div>
-                    <div className="hub-card-logo-container">
-                      <img src="/Logos/hackxJr-logo.webp" alt="hackX Jr. 9.0" className="hub-card-logo" />
-                    </div>
-                    <div className="flex flex-col items-center text-center">
-                      <h3 className="hub-card-title text-foreground">hackX Jr. 9.0</h3>
-                      <p className="hub-card-desc text-muted-foreground">The ultimate inter-school innovation competiton</p>
-                    </div>
+                    {/* hackX Jr. 9.0 Card */}
+                    <motion.div 
+                      className="no-underline w-full sm:w-auto flex justify-center"
+                      initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+                      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                      whileHover={{ y: -8 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedTier("jr")}
+                    >
+                      <div className="hub-card hackx-jr-theme cursor-pointer w-full">
+                        <div className="hub-card-badge">School Tier</div>
+                        <div className="hub-card-logo-container">
+                          <img src="/Logos/hackxJr-logo.webp" alt="hackX Jr. 9.0" className="hub-card-logo" />
+                        </div>
+                        <div className="flex flex-col items-center text-center">
+                          <h3 className="hub-card-title text-foreground">hackX Jr. 9.0</h3>
+                          <p className="hub-card-desc text-muted-foreground">The ultimate inter-school innovation competiton</p>
+                        </div>
+                      </div>
+                    </motion.div>
                   </div>
-                </motion.a>
+                )}
+
+                {/* Step 2: Select Action */}
+                {selectedTier && (
+                  <div className="flex flex-col items-center gap-8 w-full">
+                    <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-6 sm:gap-8 md:gap-12 w-full max-w-6xl">
+                      
+                      {/* Registration Card */}
+                      <Link to={selectedTier === "x" ? "/x/registration" : "/jr/registration"} className="no-underline w-full sm:w-auto flex justify-center">
+                        <motion.div 
+                          className="w-full flex justify-center"
+                          initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
+                          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                          whileHover={{ y: -8 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div className={cn("hub-card cursor-pointer w-full", selectedTier === "jr" && "hackx-jr-theme")}>
+                            <div className="hub-card-badge">Deadline: August 3</div>
+                            <div className="hub-card-logo-container flex items-center justify-center w-full mx-auto">
+                              <AnimatedRegistrationIcon isJr={selectedTier === "jr"} />
+                            </div>
+                            <div className="flex flex-col items-center text-center">
+                              <h3 className="hub-card-title text-foreground">Team Registration</h3>
+                              <p className="hub-card-desc text-muted-foreground">
+                                Register your team roster and project details for the challenge
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </Link>
+
+                      {/* Proposal Card */}
+                      <Link to={selectedTier === "x" ? "/x/proposal" : "/jr/proposal"} className="no-underline w-full sm:w-auto flex justify-center">
+                        <motion.div 
+                          className="w-full flex justify-center"
+                          initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
+                          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                          transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                          whileHover={{ y: -8 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div className={cn("hub-card cursor-pointer w-full", selectedTier === "jr" && "hackx-jr-theme")}>
+                            <div className="hub-card-badge">Deadline: August 14</div>
+                            <div className="hub-card-logo-container flex items-center justify-center w-full mx-auto">
+                              <AnimatedProposalIcon isJr={selectedTier === "jr"} />
+                            </div>
+                            <div className="flex flex-col items-center text-center">
+                              <h3 className="hub-card-title text-foreground">Submit Proposal</h3>
+                              <p className="hub-card-desc text-muted-foreground">
+                                {selectedTier === "jr"
+                                  ? "Upload your project proposal PDF"
+                                  : "Upload your project proposal PDF and video showcase link"}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </Link>
+
+                    </div>
+
+                    {/* Back Button */}
+                    <motion.button
+                      onClick={() => setSelectedTier(null)}
+                      className="btn-secondary mt-6 z-20"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Back to Tiers
+                    </motion.button>
+                  </div>
+                )}
+
               </div>
             </div>
-          </div>
           )}
 
           {/* 3. Bottom Bar / Credits */}

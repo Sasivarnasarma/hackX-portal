@@ -488,8 +488,18 @@ async def send_otp_email(
     force_provider: Optional[str] = None,
 ) -> str:
     subject = "Verify Your Email - hackX OTP Code"
-    heading = "Confirm Your Email Address"
-    description = f"Use the verification OTP code below to confirm your email for {purpose.replace('_', ' ')}. This code will expire in 10 minutes."
+    heading = "Verify Your Email Address"
+    
+    if purpose == "hackx_registration":
+        description = "You're one step closer to beginning your hackX 11.0 journey. Enter the verification code below to confirm your email address and continue your registration for Sri Lanka's premier inter-university startup challenge."
+    elif purpose == "hackx_proposal":
+        description = "You're one step closer to beginning your hackX 11.0 journey. Enter the verification code below to confirm your email address and continue your proposal submission for Sri Lanka's premier inter-university startup challenge."
+    elif purpose == "hackx_jr_registration":
+        description = "You're one step closer to beginning your hackX Jr. 9.0 journey. Enter the verification code below to confirm your email address and continue your registration for Sri Lanka's premier inter-school innovation competition."
+    elif purpose == "hackx_jr_proposal":
+        description = "You're one step closer to beginning your hackX Jr. 9.0 journey. Enter the verification code below to confirm your email address and continue your proposal submission for Sri Lanka's premier inter-school innovation competition."
+    else:
+        description = f"Use the verification OTP code below to confirm your email for {purpose.replace('_', ' ')}. This code will expire in 10 minutes."
 
     template_name = "otp_email_jr.html" if domain == "hackx_jr" else "otp_email_x.html"
     template = load_template(template_name)
@@ -616,3 +626,49 @@ async def send_welcome_jr_email(
     return await send_routed_email(
         to_email, subject, body, purpose="welcome_jr", domain="hackx_jr"
     )
+
+
+async def send_proposal_submitted_email(
+    to_email: str,
+    team_name: str,
+    submitter_name: str,
+    is_leader: bool,
+    domain: str,
+):
+    tier_title = "hackX 11.0" if domain == "hackx" else "hackX Jr. 9.0"
+    subject = f"Proposal Submitted Successfully - {team_name} | {tier_title}"
+    
+    role_str = "Team Leader" if is_leader else "Team Member"
+    timestamp_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    
+    template_name = "proposal_success_x.html" if domain == "hackx" else "proposal_success_jr.html"
+    template = load_template(template_name)
+    if template:
+        body = template.replace("{{team_name}}", html.escape(team_name))
+        body = body.replace("{{submitter_name}}", html.escape(submitter_name))
+        body = body.replace("{{timestamp}}", timestamp_str)
+    else:
+        body = f"""
+        <div style="font-family: sans-serif; padding: 20px; background-color: #020F2B; color: #f0f4ff; border-radius: 8px;">
+            <h2 style="color: #5BB8FF; border-bottom: 1px solid rgba(91, 184, 255, 0.2); padding-bottom: 10px;">{tier_title} - Proposal Upload Confirmation</h2>
+            <p>Dear participant,</p>
+            <p>This is to confirm that your team <strong>{html.escape(team_name)}</strong> has successfully uploaded their project proposal.</p>
+            <div style="background-color: #05163D; border-left: 4px solid #5BB8FF; padding: 12px; margin: 15px 0; border-radius: 4px;">
+                <p style="margin: 0; font-size: 14px;"><strong>Submitted By:</strong> {html.escape(submitter_name)}</p>
+                <p style="margin: 4px 0 0; font-size: 14px;"><strong>Timestamp:</strong> {timestamp_str}</p>
+            </div>
+            <p>If you need to make changes, you can re-upload your proposal via the portal before the submission deadline.</p>
+            <p style="margin-top: 25px; font-size: 12px; color: #8ba3c7; border-top: 1px solid rgba(91, 184, 255, 0.1); padding-top: 10px;">
+                This is an automated notification. Please do not reply to this email.
+            </p>
+        </div>
+        """
+        
+    return await send_routed_email(
+        to_email,
+        subject,
+        body,
+        purpose="proposal_submitted",
+        domain=domain,
+    )
+

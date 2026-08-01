@@ -639,7 +639,7 @@ const RegisterX: React.FC = () => {
       sessionStorage.removeItem('hackx_ambassador_code');
       clearXData();
       clearJrData();
-      navigate('/success');
+      navigate('/x/registration-success');
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         // Verification token expired

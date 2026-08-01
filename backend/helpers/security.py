@@ -57,3 +57,28 @@ def decode_captcha_session_token(token: str) -> Optional[str]:
         return None
     except jwt.PyJWTError:
         return None
+
+
+def create_jr_session_token(query: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=30
+    )
+    payload = {
+        "sub": query,
+        "purpose": "jr_session",
+        "exp": expire,
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def decode_jr_session_token(token: str) -> Optional[str]:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("purpose") != "jr_session":
+            return None
+        return payload.get("sub")
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.PyJWTError:
+        return None
+

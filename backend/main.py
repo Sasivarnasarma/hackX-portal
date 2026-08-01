@@ -26,6 +26,7 @@ from slowapi.errors import RateLimitExceeded  # noqa: E402
 from slowapi.util import get_remote_address  # noqa: E402
 from starlette.exceptions import HTTPException as StarletteHTTPException  # noqa: E402
 
+from sqlalchemy import text  # noqa: E402
 from database.connection import Base, engine  # noqa: E402
 from helpers.exception_handlers import (  # noqa: E402
     global_exception_handler,
@@ -34,6 +35,7 @@ from helpers.exception_handlers import (  # noqa: E402
     validation_exception_handler,
 )
 from helpers.oauth import verify_oauth_token_on_startup  # noqa: E402
+from helpers.drive import preload_drive_folders  # noqa: E402
 from helpers.otp_store import cleanup_expired_otps  # noqa: E402
 from helpers.email import (  # noqa: E402
     initialize_email_stats_cache,
@@ -43,6 +45,7 @@ from routes import (  # noqa: E402
     otp_router,
     register_jr_router,
     register_x_router,
+    proposal_router,
 )
 
 
@@ -53,6 +56,8 @@ async def lifespan(app: FastAPI):
         async with engine.begin() as conn:
             # Create all tables dynamically on startup
             await conn.run_sync(Base.metadata.create_all)
+
+
         logger.info("Lifespan: Database schema synchronized.")
     except Exception as e:
         logger.error(f"Lifespan: Database schema synchronization failed: {e}")
@@ -74,6 +79,12 @@ async def lifespan(app: FastAPI):
         await run_in_threadpool(verify_oauth_token_on_startup)
     except Exception as e:
         logger.error(f"Lifespan: Google Sheets diagnostic self-checks failed: {e}")
+
+    logger.info("Lifespan: Pre-loading Google Drive subfolder IDs cache...")
+    try:
+        await preload_drive_folders()
+    except Exception as e:
+        logger.error(f"Lifespan: Google Drive subfolder caching failed: {e}")
 
     yield
 
@@ -122,6 +133,7 @@ app.add_middleware(
 app.include_router(otp_router)
 app.include_router(register_x_router)
 app.include_router(register_jr_router)
+app.include_router(proposal_router)
 
 
 @app.get("/")
