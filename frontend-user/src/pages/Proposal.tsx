@@ -871,7 +871,9 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                   <h4 className="info-step-title">Submission Portal</h4>
                   <p className="info-step-desc mb-6">
                     Welcome to the {isJr ? 'hackX Jr. 9.0' : 'hackX 11.0'} Proposal Submission panel.
-                    Ensure that you upload the complete, finalized project blueprint document in PDF format along with your YouTube pitch video link.
+                    {isJr
+                      ? ' Ensure that you upload the complete, finalized project blueprint document in PDF format.'
+                      : ' Ensure that you upload the complete, finalized project blueprint document in PDF format along with your YouTube pitch video link.'}
                   </p>
 
                   <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
@@ -882,9 +884,10 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                     <ul style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', paddingLeft: '1rem', margin: 0 }}>
                       <li style={{ marginBottom: '0.625rem' }}>Blueprint format must be in <strong>PDF format</strong>.</li>
                       <li style={{ marginBottom: '0.625rem' }}>File capacity should not exceed <strong>50 MB</strong>.</li>
-                      <li style={{ marginBottom: '0.625rem' }}>YouTube URLs must be valid and viewable (Public or Unlisted).</li>
-                      <li style={{ marginBottom: '0.625rem' }}>Submissions can be updated/overwritten if submitted again before the deadline.</li>
-                      <li style={{ marginBottom: 0 }}>Automatic backend retries ensure submission stability even under volatile network conditions.</li>
+                      {!isJr && (
+                        <li style={{ marginBottom: '0.625rem' }}>YouTube URLs must be valid and viewable (Public or Unlisted).</li>
+                      )}
+                      <li style={{ marginBottom: 0 }}>Submissions can be updated/overwritten if submitted again before the deadline.</li>
                     </ul>
                   </div>
 
