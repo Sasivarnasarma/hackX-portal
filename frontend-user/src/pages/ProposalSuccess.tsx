@@ -142,29 +142,20 @@ const ProposalSuccess: React.FC<ProposalSuccessProps> = ({ tier }) => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {!(isJr && state?.isFirstTime) && (
+                {isJr && !state?.isFirstTime && (
                   <button
                     className="btn-primary"
                     style={{ padding: '0.65rem 1.5rem', fontSize: '0.875rem' }}
                     onClick={() => {
-                      if (isJr) {
-                        navigate('/jr/proposal', {
-                          state: {
-                            jrSessionToken: state?.jrSessionToken,
-                            selectedJrTeam: state?.selectedJrTeam,
-                          }
-                        });
-                      } else {
-                        navigate('/x/proposal', {
-                          state: {
-                            verificationToken: state?.verificationToken,
-                            teamDetails: state?.teamDetails,
-                          }
-                        });
-                      }
+                      navigate('/jr/proposal', {
+                        state: {
+                          jrSessionToken: state?.jrSessionToken,
+                          selectedJrTeam: state?.selectedJrTeam,
+                        }
+                      });
                     }}
                   >
-                    {isJr ? "Manage Proposals" : "Back to Submission"}
+                    Manage Proposals
                   </button>
                 )}
                 <Link to="/" style={{ textDecoration: 'none' }}>
