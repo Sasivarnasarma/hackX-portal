@@ -416,6 +416,36 @@ const RegisterX: React.FC = () => {
     setValidationErrors(newErrors);
   };
 
+  const handleTeamSizeChange = (targetTotalSize: number) => {
+    const currentTotal = additionalMembers.length + 1;
+    if (targetTotalSize === currentTotal) return;
+
+    const targetAdditionalCount = Math.max(0, Math.min(4, targetTotalSize - 1));
+
+    if (targetAdditionalCount > additionalMembers.length) {
+      const toAdd = targetAdditionalCount - additionalMembers.length;
+      const newMembers = [...additionalMembers];
+      for (let i = 0; i < toAdd; i++) {
+        newMembers.push({ name: '', nic: '', phone: '', email: '' });
+      }
+      setAdditionalMembers(newMembers);
+    } else if (targetAdditionalCount < additionalMembers.length) {
+      const newMembers = additionalMembers.slice(0, targetAdditionalCount);
+      setAdditionalMembers(newMembers);
+      const newErrors = { ...validationErrors };
+      Object.keys(newErrors).forEach((key) => {
+        if (key.startsWith('member-')) {
+          const parts = key.split('-');
+          const idx = parseInt(parts[1], 10);
+          if (!isNaN(idx) && idx >= targetAdditionalCount) {
+            delete newErrors[key];
+          }
+        }
+      });
+      setValidationErrors(newErrors);
+    }
+  };
+
   const updateMemberField = (index: number, field: keyof Omit<HackXMember, 'is_leader'>, val: string) => {
     const updated = [...additionalMembers];
     updated[index] = { ...updated[index], [field]: val };
@@ -974,11 +1004,57 @@ const RegisterX: React.FC = () => {
                     </div>
                   </motion.div>
 
-                                    {/* Dynamic Members Section */}
+                                    {/* Team Size Selection Selector */}
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '1.25rem 1.5rem',
+                    marginTop: '2rem',
+                    marginBottom: '1.5rem',
+                    textAlign: 'left'
+                  }}>
+                    <label className="form-label" style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', fontWeight: 700 }}>
+                      <Users size={16} style={{ color: 'var(--color-arc)' }} />
+                      Total Team Size (Including Leader)
+                    </label>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {[1, 2, 3, 4, 5].map((size) => {
+                        const isSelected = (additionalMembers.length + 1) === size;
+                        return (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => handleTeamSizeChange(size)}
+                            style={{
+                              flex: '1 1 0px',
+                              minWidth: '65px',
+                              padding: '0.65rem 0.5rem',
+                              fontSize: '0.8rem',
+                              fontWeight: isSelected ? 800 : 500,
+                              borderRadius: 'var(--radius-sm)',
+                              border: isSelected ? '1px solid var(--color-arc)' : '1px solid rgba(255, 255, 255, 0.1)',
+                              background: isSelected ? 'rgba(91, 184, 255, 0.15)' : 'rgba(0, 0, 0, 0.2)',
+                              color: isSelected ? '#ffffff' : 'var(--color-text-muted)',
+                              cursor: 'pointer',
+                              transition: 'var(--transition-fast)',
+                              textAlign: 'center',
+                              boxShadow: isSelected ? '0 0 12px rgba(91, 184, 255, 0.2)' : 'none'
+                            }}
+                          >
+                            {size === 1 ? '1 (Solo)' : `${size} Members`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Dynamic Members Section */}
                   <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem', textAlign: 'left' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                       <h4 style={{ fontFamily: 'var(--font-heading)', margin: 0, fontSize: '1rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.04em' }}>
-                        Additional Members ({additionalMembers.length + 1} / 5)
+                        Team Roster ({additionalMembers.length + 1} / 5)
                       </h4>
                       {additionalMembers.length < 4 && (
                         <button type="button" className="btn-secondary" onClick={addMemberField} style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', whiteSpace: 'nowrap', flexShrink: 0 }}>

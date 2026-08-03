@@ -456,7 +456,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                           whileTap={{ scale: 0.98 }}
                         >
                           <div className={cn("hub-card cursor-pointer w-full", selectedTier === "jr" && "hackx-jr-theme")}>
-                            <div className="hub-card-badge">Deadline: August 3</div>
+                            <div className="hub-card-badge">Deadline: August 07</div>
                             <div className="hub-card-logo-container flex items-center justify-center w-full mx-auto">
                               <AnimatedRegistrationIcon isJr={selectedTier === "jr"} />
                             </div>

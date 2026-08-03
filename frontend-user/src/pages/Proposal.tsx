@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, AlertCircle, FileText, Send, HelpCircle, User } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, AlertCircle, FileText, Send, HelpCircle, User, ExternalLink } from 'lucide-react';
 import OceanBackground from '../components/OceanBackground';
 import TurnstileCaptcha from '../components/TurnstileCaptcha';
 import { CinematicFooter } from '../components/ui/motion-footer';
@@ -497,7 +497,7 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
+    <div className={isJr ? 'hackx-jr-theme' : ''} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
       <OceanBackground />
 
       <main style={{
@@ -1129,6 +1129,82 @@ const Proposal: React.FC<ProposalProps> = ({ tier }) => {
                       ? ' Ensure that you upload the complete, finalized project blueprint document in PDF format.'
                       : ' Ensure that you upload the complete, finalized project blueprint document in PDF format along with your YouTube pitch video link.'}
                   </p>
+
+                  {/* Proposal Template Link & Copy Note */}
+                  <div style={{
+                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                    paddingTop: '1.25rem',
+                    marginTop: '1.25rem',
+                    textAlign: 'left'
+                  }}>
+                    <h5 style={{
+                      fontSize: '0.75rem',
+                      color: '#ffffff',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      fontWeight: 700,
+                      marginBottom: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.375rem'
+                    }}>
+                      <FileText size={14} style={{ color: isJr ? '#72E5F8' : 'var(--color-arc)' }} />
+                      Official Proposal Template:
+                    </h5>
+
+                    <div style={{
+                      background: isJr ? 'rgba(114, 229, 248, 0.08)' : 'rgba(91, 184, 255, 0.08)',
+                      border: `1px solid ${isJr ? 'rgba(114, 229, 248, 0.25)' : 'rgba(91, 184, 255, 0.25)'}`,
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '0.75rem 0.85rem',
+                      marginBottom: '1rem',
+                      fontSize: '0.75rem',
+                      color: 'var(--color-text-muted)',
+                      lineHeight: '1.45'
+                    }}>
+                      <strong style={{ color: isJr ? '#72E5F8' : '#ffffff', display: 'block', marginBottom: '0.25rem' }}>
+                        📌 Important Note:
+                      </strong>
+                      This proposal template is a view-only Google Doc. Please make a copy to your own Google Account (<strong>File → Make a copy</strong>) to edit your document.
+                    </div>
+
+                    <a
+                      href={isJr
+                        ? "https://docs.google.com/document/d/1PupIW3PEUUnTAcWWw_sNhJtspaC4CsuCR9mio3iQyEw/edit?usp=sharing"
+                        : "https://docs.google.com/document/d/1lAkOrC6DwFc6FiG9EHGpP5rwHQRj8G3ouRGJN2j6ISo/edit?usp=sharing"
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.8rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        borderRadius: 'var(--radius-md)',
+                        textDecoration: 'none',
+                        color: '#ffffff',
+                        background: isJr
+                          ? 'linear-gradient(135deg, #0A5C72 0%, #18A0C0 100%)'
+                          : 'linear-gradient(135deg, #1A6FD4 0%, #5BB8FF 100%)',
+                        border: `1px solid ${isJr ? 'rgba(114, 229, 248, 0.4)' : 'rgba(255, 255, 255, 0.25)'}`,
+                        boxShadow: isJr
+                          ? '0 4px 15px rgba(114, 229, 248, 0.2)'
+                          : '0 4px 15px rgba(91, 184, 255, 0.2)',
+                        transition: 'var(--transition-smooth)',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <FileText size={16} />
+                      {isJr ? 'hackX Jr. Proposal Template' : 'hackX Proposal Template'}
+                      <ExternalLink size={14} style={{ marginLeft: 'auto' }} />
+                    </a>
+                  </div>
 
                   <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
                     <h5 style={{ fontSize: '0.75rem', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
