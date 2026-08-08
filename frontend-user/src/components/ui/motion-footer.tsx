@@ -445,18 +445,16 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                   <div className="flex flex-col items-center gap-8 w-full">
                     <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-6 sm:gap-8 md:gap-12 w-full max-w-6xl">
                       
-                      {/* Registration Card */}
-                      <Link to={selectedTier === "x" ? "/x/registration" : "/jr/registration"} className="no-underline w-full sm:w-auto flex justify-center">
+                      {/* Registration Card (Closed) */}
+                      <div className="no-underline w-full sm:w-auto flex justify-center">
                         <motion.div 
                           className="w-full flex justify-center"
                           initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
                           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                          whileHover={{ y: -8 }}
-                          whileTap={{ scale: 0.98 }}
                         >
-                          <div className={cn("hub-card cursor-pointer w-full", selectedTier === "jr" && "hackx-jr-theme")}>
-                            <div className="hub-card-badge">Deadline: August 07</div>
+                          <div className={cn("hub-card cursor-default opacity-85 w-full", selectedTier === "jr" && "hackx-jr-theme")}>
+                            <div className="hub-card-badge">CLOSED</div>
                             <div className="hub-card-logo-container flex items-center justify-center w-full mx-auto">
                               <AnimatedRegistrationIcon isJr={selectedTier === "jr"} />
                             </div>
@@ -468,7 +466,7 @@ export function CinematicFooter({ showCards = true }: CinematicFooterProps = {})
                             </div>
                           </div>
                         </motion.div>
-                      </Link>
+                      </div>
 
                       {/* Proposal Card */}
                       <Link to={selectedTier === "x" ? "/x/proposal" : "/jr/proposal"} className="no-underline w-full sm:w-auto flex justify-center">
